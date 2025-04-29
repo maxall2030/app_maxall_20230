@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../model/orders_model.dart';
 
 class ApiOrders {
-  static const String baseUrl = "http://10.0.2.2/Maxall_php/orders/";
+  static const String baseUrl = "http://172.20.10.2/Maxall_php/orders/";
 
   /// ✅ إرسال طلب إنشاء Order جديد
   static Future<bool> placeOrder(int userId) async {

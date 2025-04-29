@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../model/addresses_data.dart';
 
 class ApiAddress {
-  static const String baseUrl = "http://10.0.2.2/Maxall_php/";
+  static const String baseUrl = "http://172.20.10.2/Maxall_php/";
 
   /// ✅ جلب العناوين من الخادم
   static Future<List<Address>> fetchAddresses(int userId) async {
@@ -57,30 +57,31 @@ class ApiAddress {
       return false;
     }
   }
+
   static Future<bool> addAddress({
-  required int userId,
-  required String address,
-  required String city,
-  required String country,
-}) async {
-  final url = Uri.parse("${baseUrl}addresses/add_address.php");
+    required int userId,
+    required String address,
+    required String city,
+    required String country,
+  }) async {
+    final url = Uri.parse("${baseUrl}addresses/add_address.php");
 
-  final response = await http.post(
-    url,
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      "user_id": userId,
-      "address": address,
-      "city": city,
-      "country": country,
-    }),
-  );
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "user_id": userId,
+        "address": address,
+        "city": city,
+        "country": country,
+      }),
+    );
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    return data["status"] == "success";
-  } else {
-    return false;
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["status"] == "success";
+    } else {
+      return false;
+    }
   }
-}
 }

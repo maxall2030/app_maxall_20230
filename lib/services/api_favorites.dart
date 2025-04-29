@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../model/products_data.dart';
 
 class ApiFavorites {
-  static const String _baseUrl = "http://10.0.2.2/Maxall_php/upload";
+  static const String _baseUrl = "http://172.20.10.2/Maxall_php/upload";
 
   /// ✅ جلب المفضلة
   static Future<List<Product>> getFavorites(int userId) async {

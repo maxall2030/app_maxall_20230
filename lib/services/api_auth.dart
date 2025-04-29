@@ -4,7 +4,7 @@ import 'package:app_maxall2/model/profile.dart';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = "http://10.0.2.2/Maxall_php/auth";
+  static const String baseUrl = "http://172.20.10.2/Maxall_php/auth";
 
   /// ✅ تسجيل مستخدم جديد
   static Future<Map<String, dynamic>> registerUser(
