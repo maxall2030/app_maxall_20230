@@ -1,7 +1,7 @@
-// screens/add_address_screen.dart
 import 'package:flutter/material.dart';
 import 'package:app_maxall2/services/api_address.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد ملف الألوان
 
 class AddAddressScreen extends StatefulWidget {
   const AddAddressScreen({super.key});
@@ -49,7 +49,11 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("إضافة عنوان جديد")),
+      appBar: AppBar(
+        title: const Text("إضافة عنوان جديد"),
+        backgroundColor: AppColors.primary,
+      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -62,13 +66,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: isLoading ? null : _saveAddress,
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("حفظ العنوان"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: AppColors.primary,
                   minimumSize: const Size(double.infinity, 48),
                 ),
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("حفظ العنوان",
+                        style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -86,6 +91,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
             value == null || value.isEmpty ? "هذا الحقل مطلوب" : null,
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: Theme.of(context).textTheme.bodyMedium,
           border: const OutlineInputBorder(),
         ),
       ),

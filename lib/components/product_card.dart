@@ -1,4 +1,3 @@
-// components/product_card.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../screens/product_screen.dart';
@@ -43,6 +42,7 @@ class _ProductCardState extends State<ProductCard> {
         width: 160,
         child: Card(
           elevation: 2,
+          color: Theme.of(context).cardColor, // ✅ لون البطاقة حسب الثيم
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -58,10 +58,11 @@ class _ProductCardState extends State<ProductCard> {
                       height: 140,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.image_not_supported,
                         size: 80,
-                        color: Colors.grey,
+                        color:
+                            AppColors.textSecondary, // ✅ لون الأيقونة عند الخطأ
                       ),
                     ),
                   ),
@@ -69,7 +70,8 @@ class _ProductCardState extends State<ProductCard> {
                     top: 8,
                     left: 8,
                     child: CircleAvatar(
-                      backgroundColor: Colors.white,
+                      backgroundColor:
+                          Theme.of(context).scaffoldBackgroundColor,
                       radius: 14,
                       child: IconButton(
                         icon: Icon(
@@ -107,7 +109,8 @@ class _ProductCardState extends State<ProductCard> {
                     bottom: 8,
                     right: 8,
                     child: CircleAvatar(
-                      backgroundColor: Colors.white,
+                      backgroundColor:
+                          Theme.of(context).scaffoldBackgroundColor,
                       radius: 14,
                       child: IconButton(
                         icon: Icon(Icons.shopping_cart,
@@ -135,24 +138,38 @@ class _ProductCardState extends State<ProductCard> {
                   children: [
                     Text(
                       widget.product.name,
-                      style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.color, // ✅ لون النص حسب الثيم
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '\$${widget.product.price}',
-                      style: const TextStyle(fontSize: 14, color: Colors.green),
+                      '${widget.product.price} ر.س',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (widget.product.rating > 0)
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.green, size: 14),
+                          const Icon(Icons.star,
+                              color: Colors.orange, size: 14),
+                          const SizedBox(width: 4),
                           Text(
                             '${widget.product.rating.toStringAsFixed(1)} ⭐ (${widget.product.reviews}K)',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.green),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary, // ✅ لون التقييمات
+                            ),
                           ),
                         ],
                       ),

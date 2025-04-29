@@ -1,7 +1,7 @@
-// screens/edit_address_screen.dart
 import 'package:flutter/material.dart';
 import '../model/addresses_data.dart';
 import '../services/api_address.dart';
+import '../constants/colors.dart'; // ✅ إضافة استدعاء الألوان الموحدة
 
 class EditAddressScreen extends StatefulWidget {
   final Address address;
@@ -28,7 +28,11 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("تعديل العنوان")),
+      appBar: AppBar(
+        title: const Text("تعديل العنوان"),
+        backgroundColor: AppColors.primary,
+      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -42,15 +46,18 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
             _sectionTitle("معلوماتك الشخصية"),
             _readOnlyText("الاسم",
                 "${widget.address.Name ?? ''} ${widget.address.lastName ?? ''}"),
-            _readOnlyText("رقم الجوال", widget.address.phone ?? "778777275"),
+            _readOnlyText("رقم الجوال", widget.address.phone ?? "غير متوفر"),
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _saveAddress,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: AppColors.primary,
                 minimumSize: const Size(double.infinity, 50),
               ),
-              child: const Text("حفظ التعديلات"),
+              child: const Text(
+                "حفظ التعديلات",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -61,8 +68,12 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
   Widget _sectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-          fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).textTheme.bodyLarge?.color ??
+            AppColors.textSecondary,
+      ),
     );
   }
 
@@ -85,19 +96,26 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
           const SizedBox(height: 4),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Theme.of(context).cardColor,
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(value),
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyLarge?.color ??
+                    AppColors.textPrimary,
+              ),
+            ),
           ),
         ],
       ),
@@ -116,7 +134,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ تم حفظ التعديلات بنجاح")),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("❌ حدث خطأ أثناء حفظ التعديلات")),

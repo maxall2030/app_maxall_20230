@@ -1,8 +1,6 @@
-// components/pro_card.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../screens/product_screen.dart';
-// ignore: unused_import
 import '../constants/colors.dart';
 import '../model/products_data.dart';
 import '../providers/cart_provider.dart';
@@ -42,8 +40,7 @@ class _ProductCardState extends State<ProductCard> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      ProductScreen(product: widget.product),
+                  builder: (context) => ProductScreen(product: widget.product),
                 ),
               );
             }
@@ -51,14 +48,14 @@ class _ProductCardState extends State<ProductCard> {
       child: Container(
         margin: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor, // ✅ دعم الوضع الليلي تلقائيًا
           borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: Theme.of(context).shadowColor.withOpacity(0.1),
               blurRadius: 5,
-              offset: Offset(0, 3),
-            )
+              offset: const Offset(0, 3),
+            ),
           ],
         ),
         child: Column(
@@ -74,10 +71,10 @@ class _ProductCardState extends State<ProductCard> {
                     height: 140,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
+                    errorBuilder: (context, error, stackTrace) => Icon(
                       Icons.image_not_supported,
                       size: 80,
-                      color: Colors.grey,
+                      color: AppColors.textSecondary, // ✅ لون الأيقونة
                     ),
                   ),
                 ),
@@ -109,11 +106,9 @@ class _ProductCardState extends State<ProductCard> {
                         }
                       },
                       child: CircleAvatar(
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).cardColor,
                         child: Icon(
-                          isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: Colors.red,
                           size: 18,
                         ),
@@ -136,25 +131,26 @@ class _ProductCardState extends State<ProductCard> {
                           ),
                         );
                       },
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.shopping_cart, color: Colors.black),
+                      child: CircleAvatar(
+                        backgroundColor: Theme.of(context).cardColor,
+                        child: Icon(Icons.shopping_cart,
+                            color: AppColors.textPrimary),
                       ),
                     ),
                   ),
               ],
             ),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     widget.product.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -171,13 +167,14 @@ class _ProductCardState extends State<ProductCard> {
                   if (widget.product.rating > 0)
                     Row(
                       children: [
-                        const Icon(Icons.star,
-                            color: Colors.orange, size: 14),
+                        const Icon(Icons.star, color: Colors.orange, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           "${widget.product.rating.toStringAsFixed(1)} (${widget.product.reviews}K)",
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),

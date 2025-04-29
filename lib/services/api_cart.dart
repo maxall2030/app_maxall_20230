@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import '../model/products_data.dart';
 
 class ApiCart {
-  static const String baseUrl = "http://172.20.10.2/Maxall_php/download/";
+  static const String baseUrl = "http://10.0.2.2/Maxall_php/download/";
 
   static Future<bool> addToCart(int userId, int productId, int quantity) async {
     try {

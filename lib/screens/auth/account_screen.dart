@@ -1,15 +1,17 @@
-// screens/auth/account_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:app_maxall2/constants/colors.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
 import 'package:app_maxall2/screens/address_screen.dart';
 import 'package:app_maxall2/screens/auth/profile_screen.dart';
 import 'package:app_maxall2/screens/qr_code_screen.dart';
-import 'package:app_maxall2/viewers/widgets/widget_account.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:app_maxall2/model/banners_data.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/utils/user_session.dart';
-import 'package:app_maxall2/model/profile.dart';
+import 'package:app_maxall2/model/banners_data.dart';
+import 'package:app_maxall2/providers/ThemeProvider.dart';
+import 'package:app_maxall2/viewers/widgets/widget_account.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -21,6 +23,7 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   String userName = "جاري التحميل...";
   String userEmail = "";
+  String? userProfileImage;
   bool isLoading = true;
 
   @override
@@ -31,29 +34,53 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _loadProfileData() async {
     final userId = await UserSession.getUserId();
-    final response = await AuthService.getUserProfile(userId);
+    final profile = await AuthService.getUserProfile(userId);
 
-    if (response["status"] == "success") {
-      final profile = Profile.fromJson(response["data"]);
+    if (profile != null) {
       setState(() {
-        userName = profile.firstName;
+        userName = profile.name;
         userEmail = profile.email;
+        userProfileImage = profile.profileImage;
         isLoading = false;
       });
     } else {
       setState(() {
         userName = "مستخدم غير معروف";
         userEmail = "";
+        userProfileImage = null;
         isLoading = false;
       });
     }
   }
 
+  ImageProvider getProfileImage() {
+    try {
+      if (userProfileImage != null && userProfileImage!.isNotEmpty) {
+        final normalizedBase64 = base64Normalize(userProfileImage!);
+        final bytes = base64Decode(normalizedBase64);
+        return MemoryImage(bytes);
+      } else {
+        return const AssetImage('assets/User.png');
+      }
+    } catch (e) {
+      print('⚠️ خطأ أثناء فك تشفير الصورة: $e');
+      return const AssetImage('assets/User.png');
+    }
+  }
+
+  String base64Normalize(String base64String) {
+    int remainder = base64String.length % 4;
+    if (remainder != 0) {
+      base64String += '=' * (4 - remainder);
+    }
+    return base64String;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: BottomNavBar(currentIndex: 2),
-      backgroundColor: const Color.fromARGB(255, 229, 225, 234),
+      bottomNavigationBar: BottomNavBar(currentIndex: 3),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -61,9 +88,9 @@ class _AccountScreenState extends State<AccountScreen> {
               GestureDetector(
                 onTap: () {
                   Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfileScreen()),
-                  );
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfileScreen()));
                 },
                 child: _buildProfileHeader(),
               ),
@@ -83,11 +110,16 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildProfileHeader() {
+    final ImageProvider imageProvider =
+        (userProfileImage != null && userProfileImage!.isNotEmpty)
+            ? MemoryImage(base64Decode(base64Normalize(userProfileImage!)))
+            : const AssetImage('assets/User.png');
+
     return Stack(
       alignment: Alignment.center,
       children: [
         Container(
-          height: 10,
+          height: 150,
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage("images/cover.jpg"),
@@ -97,7 +129,7 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         Container(
           height: 150,
-          color: const Color.fromARGB(255, 116, 23, 216).withOpacity(0.3),
+          color: AppColors.primary.withOpacity(0.3),
         ),
         Positioned(
           bottom: 10,
@@ -107,7 +139,7 @@ class _AccountScreenState extends State<AccountScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Theme.of(context).cardColor.withOpacity(0.9),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -122,35 +154,58 @@ class _AccountScreenState extends State<AccountScreen> {
                 CircleAvatar(
                   radius: 35,
                   backgroundColor: Colors.grey[300],
-                  backgroundImage: const AssetImage("images/userimage.jpg"),
+                  backgroundImage: getProfileImage(),
                 ),
                 const SizedBox(width: 9),
                 Expanded(
                   child: isLoading
-                      ? const CircularProgressIndicator()
+                      ? const Center(child: CircularProgressIndicator())
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               userName,
-                              style: const TextStyle(
-                                fontSize: 18,
+                              style: TextStyle(
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.color,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
+                            const SizedBox(height: 4),
                             Text(
                               userEmail,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black54,
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.color
+                                    ?.withOpacity(0.8),
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                 ),
-                const Icon(Icons.arrow_forward_ios,
-                    size: 18, color: Colors.black54),
+                IconButton(
+                  icon: const Icon(Icons.qr_code,
+                      size: 26, color: Colors.deepPurple),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const QRCodeScreen(userData: '1234')),
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -163,9 +218,12 @@ class _AccountScreenState extends State<AccountScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color.fromARGB(255, 73, 28, 236), Colors.white],
+          colors: [
+            AppColors.primary,
+            Theme.of(context).scaffoldBackgroundColor
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -195,7 +253,6 @@ class _AccountScreenState extends State<AccountScreen> {
         options: CarouselOptions(
           height: 150,
           autoPlay: true,
-          autoPlayInterval: const Duration(seconds: 3),
           enlargeCenterPage: true,
           viewportFraction: 0.9,
         ),
@@ -217,35 +274,53 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Widget _buildAccountOptions(BuildContext context) {
     return _buildListSection("My account", [
-      _buildListItem("Addresses", Icons.location_on, context, AddressScreen()),
-      _buildListItem("Payment", Icons.credit_card, context, null),
-      _buildListItem("Warranty Claims", Icons.build, context, null),
+      _buildListItem("Account", Icons.person, context, const ProfileScreen()),
       _buildListItem(
-          "QR Code", Icons.qr_code, context, QRCodeScreen(userData: '1234')),
+          "Addresses", Icons.location_on, context, const AddressScreen()),
     ]);
   }
 
   Widget _buildSettings() {
     return _buildListSection("Settings", [
-      _buildListItem("Country", Icons.public, null, null),
-      _buildListItem("Language", Icons.flag, null, null),
+      _buildThemeToggle(),
       _buildListItem("Security", Icons.security, null, null),
       _buildListItem("Notifications", Icons.notifications, null, null),
     ]);
   }
 
+  Widget _buildThemeToggle() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDark = themeProvider.themeMode == ThemeMode.dark;
+
+    return ListTile(
+      leading: Icon(Icons.brightness_6, color: AppColors.primary),
+      title: Text("الوضع الليلي",
+          style:
+              TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
+      trailing: Switch(
+        value: isDark,
+        onChanged: (value) => themeProvider.toggleTheme(value),
+        activeColor: AppColors.primary,
+      ),
+    );
+  }
+
   Widget _buildListItem(
       String title, IconData icon, BuildContext? context, Widget? screen) {
     return ListTile(
-      leading: Icon(icon, color: const Color.fromARGB(255, 79, 25, 240)),
-      title: Text(title),
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: Theme.of(this.context).textTheme.bodyLarge?.color,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       trailing: const Icon(Icons.arrow_forward_ios, size: 18),
       onTap: () {
         if (context != null && screen != null) {
           Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => screen),
-          );
+              context, MaterialPageRoute(builder: (context) => screen));
         }
       },
     );
@@ -256,7 +331,7 @@ class _AccountScreenState extends State<AccountScreen> {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -265,8 +340,10 @@ class _AccountScreenState extends State<AccountScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Text(title,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).textTheme.bodyLarge?.color)),
           ),
           const Divider(),
           Column(children: items),
@@ -278,26 +355,28 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildSignOutButton() {
     return GestureDetector(
       onTap: () async {
-        await UserSession.clearUserId(); // حذف البيانات من SharedPreferences
+        await UserSession.clearUserId();
         if (!mounted) return;
-        Navigator.of(context)
-            .pushReplacementNamed('/login'); // أو LoginScreen()
+        Navigator.of(context).pushReplacementNamed('/login');
       },
       child: Container(
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Center(
+        child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text("تسجيل الخروج",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              SizedBox(width: 5),
-              Icon(Icons.power_settings_new, color: Colors.red),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.bodyLarge?.color)),
+              const SizedBox(width: 5),
+              const Icon(Icons.power_settings_new, color: Colors.red),
             ],
           ),
         ),
@@ -308,20 +387,15 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildSocialLinks() {
     return Column(
       children: [
-        const Text("Sell with us",
-            style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue)),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(Icons.facebook, size: 30, color: Colors.black54),
+            Icon(Icons.public, size: 30, color: Colors.grey),
             SizedBox(width: 15),
-            Icon(Icons.facebook, size: 30, color: Colors.black54),
+            Icon(Icons.camera_alt, size: 30, color: Colors.grey),
             SizedBox(width: 15),
-            Icon(Icons.facebook, size: 30, color: Colors.black54),
-            SizedBox(width: 15),
-            Icon(Icons.linked_camera, size: 30, color: Colors.black54),
+            Icon(Icons.alternate_email, size: 30, color: Colors.grey),
           ],
         ),
       ],
@@ -329,10 +403,10 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildFooter() {
-    return const Padding(
-      padding: EdgeInsets.all(12),
+    return Padding(
+      padding: const EdgeInsets.all(12),
       child: Text("© 2025 maxall.com. All rights reserved.",
-          style: TextStyle(fontSize: 12, color: Colors.black54)),
+          style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
     );
   }
 }

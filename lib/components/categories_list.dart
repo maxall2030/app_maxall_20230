@@ -26,15 +26,26 @@ class _CategoryListState extends State<CategoryList> {
     return Container(
       height: 160,
       padding: const EdgeInsets.symmetric(vertical: 8),
+      color: Theme.of(context).scaffoldBackgroundColor, // ✅ خلفية حسب الثيم
       child: FutureBuilder<List<Category>>(
         future: _categoriesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text("⚠ حدث خطأ أثناء تحميل الفئات!"));
+            return Center(
+              child: Text(
+                "⚠ حدث خطأ أثناء تحميل الفئات!",
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("⚠ لا توجد فئات متاحة."));
+            return Center(
+              child: Text(
+                "⚠ لا توجد فئات متاحة.",
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            );
           }
 
           final categories = snapshot.data!;
@@ -45,7 +56,6 @@ class _CategoryListState extends State<CategoryList> {
             itemBuilder: (context, index) {
               return GestureDetector(
                 onTap: () {
-                  // ✅ عند الضغط على الفئة، انتقل إلى صفحة المنتجات التابعة لها
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -65,9 +75,12 @@ class _CategoryListState extends State<CategoryList> {
                           Container(
                             height: 80,
                             width: 80,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              image: DecorationImage(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .background, // ✅ لون خلفية الفئات حسب الثيم
+                              image: const DecorationImage(
                                 image: AssetImage('images/backgroundcat.jpg'),
                                 fit: BoxFit.cover,
                               ),
@@ -77,6 +90,8 @@ class _CategoryListState extends State<CategoryList> {
                             radius: 30,
                             backgroundImage:
                                 NetworkImage(categories[index].imageUrl),
+                            backgroundColor: Theme.of(context)
+                                .scaffoldBackgroundColor, // ✅ دائرة الخلفية ديناميكية
                           ),
                         ],
                       ),

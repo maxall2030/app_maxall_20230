@@ -1,4 +1,3 @@
-// screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
@@ -45,33 +44,53 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _filterProducts(String query) {
-    setState(() {
-      filteredProducts = allProducts
-          .where((product) => product.name.toLowerCase().contains(query))
-          .toList();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: BottomNavBar(currentIndex: 0),
       body: CustomScrollView(
         slivers: [
+          // ✅ خلفية الصورة مع شريط البحث المنخفض
           SliverAppBar(
-            floating: false,
             pinned: true,
-            backgroundColor: Colors.white,
-            expandedHeight: 100,
-            flexibleSpace: Padding(
-              padding: const EdgeInsets.only(top: 50, left: 10, right: 10),
-              child: CustomSearchBar(
-                onSearch: _filterProducts,
+            expandedHeight: 150,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/header_bg.jpg',
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black.withOpacity(0.9) // الوضع الليلي
+                            : Colors.white.withOpacity(0.9), // الوضع النهاري
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            title: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: SizedBox(
+                height: 45,
+                child: CustomSearchBar(),
               ),
             ),
+            centerTitle: true,
           ),
+
           SliverToBoxAdapter(child: CategoryList()),
+
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -110,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     onPressed: () {},
-                    child: Text(
+                    child: const Text(
                       'VIEW ALL',
                       style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
@@ -119,12 +138,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+
           SliverToBoxAdapter(
             child: CarouselSlider(
               options: CarouselOptions(
-                  height: 150,
-                  autoPlay: true,
-                  autoPlayInterval: Duration(seconds: 3)),
+                height: 150,
+                autoPlay: true,
+                autoPlayInterval: const Duration(seconds: 3),
+              ),
               items: bannerImages.map((banner) {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -139,16 +160,18 @@ class _HomeScreenState extends State<HomeScreen> {
               }).toList(),
             ),
           ),
+
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("منتجات مميزة",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 10),
+                  const Text(
+                    "منتجات مميزة",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
                   SizedBox(
                     height: 250,
                     child: ListView.builder(
@@ -164,14 +187,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                  SizedBox(height: 20),
-                  Text("الأكثر مبيعًا",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "الأكثر مبيعًا",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
           ),
+
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverGrid(

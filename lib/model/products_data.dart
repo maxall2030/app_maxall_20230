@@ -60,8 +60,7 @@ class Product {
       rating: double.tryParse(json["rating"]?.toString() ?? "0") ?? 0.0,
       reviews: int.tryParse(json["reviews"]?.toString() ?? "0") ?? 0,
       sold: int.tryParse(json["sold"]?.toString() ?? "0") ?? 0,
-      quantity: int.tryParse(json["quantity"]?.toString() ?? "1") ??
-          1, // ✅ الافتراضي 1
+      quantity: int.tryParse(json["quantity"]?.toString() ?? "1") ?? 1,
     );
   }
 

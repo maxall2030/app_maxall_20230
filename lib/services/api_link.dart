@@ -14,3 +14,4 @@ const String linkget_products_by_category =
     "$linkServerName/download/get_products_by_category.php?category_id=";
 const String linkprofile = "$linkServerName/auth/profile.php";
 const String linkprofile_id = "$linkServerName/auth/profile.php?user_id=";
+const String linkSearch = "$linkServerName/search_products.php?query=";

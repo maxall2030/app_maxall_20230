@@ -1,38 +1,37 @@
-// model/profile.dart
 class Profile {
   int userId;
   String email;
-  String firstName;
-  String lastName;
+  String name;
   String phone;
   String birthdate;
   String nationality;
   String gender;
   String address;
+  String profileImage; // ✅ جديد
 
   Profile({
     required this.userId,
     required this.email,
-    required this.firstName,
-    required this.lastName,
+    required this.name,
     required this.phone,
     required this.birthdate,
     required this.nationality,
     required this.gender,
     required this.address,
+    required this.profileImage, // ✅ جديد
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
       userId: json["id"] ?? 0,
       email: json["email"]?.toString() ?? "",
-      firstName: json["first_name"]?.toString() ?? "",
-      lastName: json["last_name"]?.toString() ?? "",
+      name: json["name"]?.toString() ?? "",
       phone: json["phone"]?.toString() ?? "",
       birthdate: json["birthdate"]?.toString() ?? "",
       nationality: json["nationality"]?.toString() ?? "",
       gender: json["gender"]?.toString() ?? "",
       address: json["address"]?.toString() ?? "",
+      profileImage: json["profile_image"]?.toString() ?? "", // ✅ جديد
     );
   }
 
@@ -40,13 +39,13 @@ class Profile {
     return {
       "user_id": userId,
       "email": email,
-      "first_name": firstName,
-      "last_name": lastName,
+      "name": name,
       "phone": phone,
       "birthdate": birthdate,
       "nationality": nationality,
       "gender": gender,
       "address": address,
+      "profile_image": profileImage, // ✅ جديد
     };
   }
 }

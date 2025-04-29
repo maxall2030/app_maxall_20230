@@ -1,9 +1,10 @@
 // components/bottom_nav_bar.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/colors.dart'; // ✅ استدعاء الثوابت
 import '../screens/home_screen.dart';
 import '../screens/cart_screen.dart';
-import '../screens/favorites_screen.dart'; // << أضف هذا
+import '../screens/favorites_screen.dart';
 import '../screens/auth/account_screen.dart';
 import '../providers/cart_provider.dart';
 
@@ -27,7 +28,7 @@ class BottomNavBar extends StatelessWidget {
         );
         break;
       case 2:
-        nextScreen = FavoritesScreen(); // << هنا زر المفضلة
+        nextScreen = FavoritesScreen();
         break;
       case 3:
         nextScreen = AccountScreen();
@@ -49,15 +50,33 @@ class BottomNavBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: safeIndex,
       onTap: (index) => _onItemTapped(context, index),
-      backgroundColor: Colors.white,
-      selectedItemColor: const Color.fromARGB(255, 113, 21, 234),
-      unselectedItemColor: Colors.grey,
-      type: BottomNavigationBarType.fixed, // ضروري مع 4+ عناصر
-      items: [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Account"),
+      backgroundColor:
+          Theme.of(context).scaffoldBackgroundColor, // ✅ خلفية حسب الثيم
+      selectedItemColor: AppColors.primary, // ✅ لون محدد حسب الثوابت
+      unselectedItemColor:
+          AppColors.textSecondary, // ✅ لون غير محدد حسب الثوابت
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: "Home",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.shopping_cart_outlined),
+          activeIcon: Icon(Icons.shopping_cart),
+          label: "Cart",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.favorite_border),
+          activeIcon: Icon(Icons.favorite),
+          label: "Favorites",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person_outline),
+          activeIcon: Icon(Icons.person),
+          label: "Account",
+        ),
       ],
     );
   }

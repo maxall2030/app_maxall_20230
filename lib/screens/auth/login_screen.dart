@@ -1,9 +1,9 @@
-// screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/screens/home_screen.dart';
 import 'package:app_maxall2/screens/auth/register_screen.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد ملف الألوان
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   bool isPasswordVisible = false;
   bool rememberMe = false;
+
   Future<void> _login() async {
     setState(() => isLoading = true);
 
@@ -28,12 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response["status"] == "success") {
       final userId = int.tryParse(response["user"]["id"].toString()) ?? 0;
-
-      // ✅ إذا اختار المستخدم "تذكرني"، احفظ معرفه
-      if (rememberMe) {
-        await UserSession.saveUserId(userId);
-      }
-
+      await UserSession.saveUserId(userId);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -48,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           _buildTopDesign(),
@@ -57,14 +53,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   "تسجيل الدخول",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   "مرحبًا بعودتك! يرجى تسجيل الدخول للمتابعة.",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 30),
                 _buildTextField(
@@ -96,13 +92,13 @@ class _LoginScreenState extends State<LoginScreen> {
       right: 0,
       child: Container(
         height: 150,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF4B0082), Color(0xFF8A2BE2)],
+            colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             bottomLeft: Radius.circular(40),
             bottomRight: Radius.circular(40),
           ),
@@ -117,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.deepPurple),
+        prefixIcon: Icon(icon, color: AppColors.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -129,11 +125,11 @@ class _LoginScreenState extends State<LoginScreen> {
       obscureText: !isPasswordVisible,
       decoration: InputDecoration(
         labelText: "كلمة المرور",
-        prefixIcon: const Icon(Icons.lock, color: Colors.deepPurple),
+        prefixIcon: Icon(Icons.lock, color: AppColors.primary),
         suffixIcon: IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
+            color: AppColors.textSecondary,
           ),
           onPressed: () {
             setState(() {
@@ -151,13 +147,14 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Checkbox(
           value: rememberMe,
+          activeColor: AppColors.primary,
           onChanged: (value) {
             setState(() {
               rememberMe = value!;
             });
           },
         ),
-        const Text("تذكرني"),
+        Text("تذكرني", style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
@@ -166,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return ElevatedButton(
       onPressed: _login,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 100),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -179,11 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildSocialIcon("assets/facebook.png"),
+        _buildSocialIcon("assets/Facebook.png"),
         const SizedBox(width: 15),
-        _buildSocialIcon("assets/twitter.png"),
+        _buildSocialIcon("assets/x.png"),
         const SizedBox(width: 15),
-        _buildSocialIcon("assets/google.png"),
+        _buildSocialIcon("assets/Google.png"),
       ],
     );
   }
@@ -192,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return InkWell(
       onTap: () {},
       child: CircleAvatar(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Theme.of(context).cardColor,
         radius: 22,
         child: Image.asset(assetPath, width: 24),
       ),
@@ -207,15 +204,17 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => RegisterScreen()),
         );
       },
-      child: const Text.rich(
+      child: Text.rich(
         TextSpan(
           text: "ليس لديك حساب؟ ",
-          style: TextStyle(fontSize: 16),
+          style: Theme.of(context).textTheme.bodyMedium,
           children: [
             TextSpan(
               text: "إنشاء حساب",
               style: TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
             ),
           ],
         ),

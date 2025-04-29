@@ -1,10 +1,10 @@
-// screens/address_screen.dart
 import 'package:flutter/material.dart';
 import '../services/api_address.dart';
 import '../model/addresses_data.dart';
 import 'edit_address_screen.dart';
 import 'add_address_screen.dart';
 import '../utils/user_session.dart';
+import '../constants/colors.dart'; // ✅ استيراد الألوان الثابتة
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -54,7 +54,7 @@ class _AddressScreenState extends State<AddressScreen> {
         borderRadius: BorderRadius.circular(15),
       ),
       elevation: 6,
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -62,39 +62,40 @@ class _AddressScreenState extends State<AddressScreen> {
           children: [
             Row(
               children: [
-                const Icon(Icons.location_on, color: Colors.deepPurple),
+                Icon(Icons.location_on, color: AppColors.primary),
                 const SizedBox(width: 8),
-                const Text("عنوان التوصيل",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    )),
+                Text(
+                  "عنوان التوصيل",
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               "${address.address}, ${address.city}, ${address.country}",
-              style: const TextStyle(fontSize: 15, height: 1.5),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.phone_android, color: Colors.grey),
+                Icon(Icons.phone_android, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   address.phone ?? "غير متوفر",
-                  style: const TextStyle(fontSize: 15),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.date_range, color: Colors.grey),
+                Icon(Icons.date_range, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   "أضيف في: ${address.createdAt.toString().split(' ').first}",
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
@@ -115,12 +116,12 @@ class _AddressScreenState extends State<AddressScreen> {
                   icon: const Icon(Icons.edit, size: 18),
                   label: const Text("تعديل"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: AppColors.primary,
                   ),
                 ),
                 OutlinedButton.icon(
                   onPressed: () {
-                    // تنفيذ الحذف
+                    // تنفيذ الحذف لاحقاً
                   },
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   label: const Text("حذف", style: TextStyle(color: Colors.red)),
@@ -142,7 +143,9 @@ class _AddressScreenState extends State<AddressScreen> {
       appBar: AppBar(
         title: const Text("عناويني"),
         centerTitle: true,
+        backgroundColor: AppColors.primary,
       ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : addresses.isEmpty

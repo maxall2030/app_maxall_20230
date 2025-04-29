@@ -10,6 +10,7 @@
 analyzer:
   errors:
     prefer_const_declarations: ignore
+    file_names: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:

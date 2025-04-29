@@ -1,4 +1,3 @@
-// screens/cart_screen.dart
 import 'package:app_maxall2/screens/Orders/order_confirmation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +5,7 @@ import '../providers/cart_provider.dart';
 import '../components/bottom_nav_bar.dart';
 import 'package:app_maxall2/services/api_orders.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'package:app_maxall2/constants/colors.dart'; // ✅ إضافة ملف الألوان
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -33,9 +33,15 @@ class _CartScreenState extends State<CartScreen> {
     final cartProvider = Provider.of<CartProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("🛒 سلة المشتريات")),
+      appBar: AppBar(
+        title: const Text("🛒 سلة المشتريات"),
+        backgroundColor: AppColors.primary,
+      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: cartProvider.cartItems.isEmpty
-          ? const Center(child: Text("🛒 سلتك فارغة، أضف منتجات للمتابعة."))
+          ? const Center(
+              child: Text("🛒 سلتك فارغة، أضف منتجات للمتابعة."),
+            )
           : Stack(
               children: [
                 Padding(
@@ -50,10 +56,10 @@ class _CartScreenState extends State<CartScreen> {
                         elevation: 6,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12)),
+                        color: Theme.of(context).cardColor,
                         child: Container(
                           height: 130,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
+                          padding: const EdgeInsets.all(10),
                           child: Row(
                             children: [
                               ClipRRect(
@@ -72,16 +78,20 @@ class _CartScreenState extends State<CartScreen> {
                                   children: [
                                     Text(
                                       product.name,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge
+                                          ?.copyWith(
+                                              fontWeight: FontWeight.bold),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     const SizedBox(height: 6),
-                                    Text("₪ ${product.price}",
-                                        style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[700])),
+                                    Text(
+                                      "₪ ${product.price}",
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          color: Theme.of(context).hintColor),
+                                    ),
                                     const Spacer(),
                                     Row(
                                       children: [
@@ -124,7 +134,6 @@ class _CartScreenState extends State<CartScreen> {
                                     onPressed: () =>
                                         cartProvider.updateQuantity(product, 0),
                                     iconSize: 22,
-                                    tooltip: "حذف المنتج",
                                   ),
                                 ],
                               ),
@@ -159,51 +168,24 @@ class _CartScreenState extends State<CartScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("المجموع الفرعي ($itemCount أصناف)",
-                    style: const TextStyle(fontSize: 15)),
-                Text("₪ ${total.toStringAsFixed(2)}",
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
+            _buildSummaryRow("المجموع الفرعي ($itemCount أصناف)",
+                "₪ ${total.toStringAsFixed(2)}"),
             const SizedBox(height: 8),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("رسوم الشحن", style: TextStyle(fontSize: 15)),
-                Text("مجانا", style: TextStyle(color: Colors.green)),
-              ],
-            ),
-            const SizedBox(height: 4),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("رسوم سوبر مول", style: TextStyle(fontSize: 15)),
-                Text("مجانا", style: TextStyle(color: Colors.green)),
-              ],
-            ),
+            _buildSummaryRow("رسوم الشحن", "مجانا", isGreen: true),
+            _buildSummaryRow("رسوم سوبر مول", "مجانا", isGreen: true),
             const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("المجموع",
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
-                Text("₪ ${total.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                        fontSize: 17, fontWeight: FontWeight.bold)),
-              ],
+            _buildSummaryRow(
+              "المجموع",
+              "₪ ${total.toStringAsFixed(2)}",
+              isBold: true,
             ),
             const SizedBox(height: 6),
             const Text("شامل الضريبة", style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: AppColors.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(12),
@@ -239,7 +221,7 @@ class _CartScreenState extends State<CartScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: AppColors.primary,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),
@@ -251,6 +233,24 @@ class _CartScreenState extends State<CartScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value,
+      {bool isGreen = false, bool isBold = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: 15)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isBold ? 17 : 15,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: isGreen ? Colors.green : null,
+          ),
+        ),
+      ],
     );
   }
 }

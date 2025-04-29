@@ -1,10 +1,10 @@
-// screens/favorites_screen.dart
 import 'package:flutter/material.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
 import 'package:app_maxall2/services/api_favorites.dart';
 import 'package:app_maxall2/model/products_data.dart';
 import 'package:app_maxall2/components/product_card.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'package:app_maxall2/constants/colors.dart'; // ✅ إضافة استدعاء الألوان الموحدة
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -55,8 +55,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("المفضلة"),
+        backgroundColor: AppColors.primary,
+      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       bottomNavigationBar: BottomNavBar(currentIndex: 2),
-      appBar: AppBar(title: const Text("المفضلة")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : favoriteProducts.isEmpty

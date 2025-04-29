@@ -1,4 +1,3 @@
-// screens/Orders/orders_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
@@ -7,6 +6,7 @@ import 'package:app_maxall2/model/profile.dart';
 import 'package:app_maxall2/services/api_orders.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'dart:convert'; // ضروري لفك تشفير صورة المستخدم
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -36,10 +36,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   Future<void> _fetchUserProfile(int userId) async {
     try {
-      final response = await AuthService.getUserProfile(userId);
-      if (response["status"] == "success" && response["data"] != null) {
+      final profile = await AuthService.getUserProfile(userId);
+      if (profile != null) {
         setState(() {
-          userProfile = Profile.fromJson(response["data"]);
+          userProfile = profile;
         });
       }
     } catch (e) {
@@ -71,35 +71,45 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Widget _buildUserInfo() {
-    return userProfile == null
-        ? const SizedBox.shrink()
-        : Container(
-            padding: const EdgeInsets.all(16),
-            color: const Color.fromARGB(255, 240, 240, 250),
-            child: Row(
+    if (userProfile == null) return const SizedBox.shrink();
+
+    final String? localProfileImage = userProfile?.profileImage;
+
+    final ImageProvider imageProvider =
+        (localProfileImage != null && localProfileImage.isNotEmpty)
+            ? MemoryImage(base64Decode(localProfileImage))
+            : const AssetImage("assets/User.png") as ImageProvider;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: const Color.fromARGB(255, 240, 240, 250),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundImage: imageProvider,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: const AssetImage("images/userimage.jpg"),
+                Text(
+                  userProfile!.name,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(userProfile!.firstName + " " + userProfile!.lastName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Text(userProfile!.email,
-                          style: const TextStyle(
-                              color: Colors.grey, fontSize: 14)),
-                    ],
-                  ),
-                )
+                const SizedBox(height: 4),
+                Text(
+                  userProfile!.email,
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
               ],
             ),
-          );
+          )
+        ],
+      ),
+    );
   }
 
   @override
@@ -155,7 +165,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset("images/empty_box.jpg", height: 160),
+                          Image.asset("assets/empty_box.jpg", height: 160),
                           const SizedBox(height: 16),
                           const Text("لم يتم العثور على المنتجات",
                               style: TextStyle(
@@ -181,7 +191,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 color: Color.fromARGB(255, 71, 26, 232)),
                             title: Text("طلب #${order.id}"),
                             subtitle: Text(
-                              "المبلغ: ₪${order.totalPrice.toStringAsFixed(2)}  -  الحالة: ${order.status}",
+                              "المبلغ: ₪${order.totalPrice.toStringAsFixed(2)} - الحالة: ${order.status}",
                               style: const TextStyle(fontSize: 13),
                             ),
                             trailing: Text(

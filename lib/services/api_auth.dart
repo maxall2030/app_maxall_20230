@@ -1,124 +1,92 @@
-// services/api_auth.dart
 import 'dart:convert';
-import 'package:app_maxall2/model/profile.dart';
 import 'package:http/http.dart' as http;
+import 'package:app_maxall2/model/profile.dart';
 
 class AuthService {
-  static const String baseUrl = "http://172.20.10.2/Maxall_php/auth";
+  static const String baseUrl = "http://10.0.2.2/Maxall_php/auth";
 
-  /// ✅ تسجيل مستخدم جديد
-  static Future<Map<String, dynamic>> registerUser(
-      String name, String email, String password) async {
-    try {
-      final url = "$baseUrl/register.php";
-      final headers = {"Content-Type": "application/json"};
-      final body =
-          jsonEncode({"name": name, "email": email, "password": password});
-
-      print("📡 [REGISTER] إرسال طلب تسجيل مستخدم جديد إلى: $url");
-      print("📦 البيانات المرسلة: $body");
-
-      final response =
-          await http.post(Uri.parse(url), headers: headers, body: body);
-
-      print("🔄 استجابة السيرفر: ${response.statusCode}");
-      print("📥 البيانات المستلمة: ${response.body}");
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {"status": "error", "message": "⚠ فشل في التسجيل"};
-      }
-    } catch (e) {
-      print("❌ خطأ أثناء إرسال طلب التسجيل: $e");
-      return {"status": "error", "message": "⚠ خطأ: $e"};
-    }
-  }
-
-  /// ✅ تسجيل الدخول
   static Future<Map<String, dynamic>> loginUser(
       String email, String password) async {
     try {
       final url = "$baseUrl/login.php";
       final headers = {"Content-Type": "application/json"};
-      final body = jsonEncode({"email": email, "password": password});
-
-      print("📡 [LOGIN] إرسال طلب تسجيل دخول إلى: $url");
-      print("📦 البيانات المرسلة: $body");
+      final body = jsonEncode({
+        "email": email,
+        "password": password,
+      });
 
       final response =
           await http.post(Uri.parse(url), headers: headers, body: body);
 
-      print("🔄 استجابة السيرفر: ${response.statusCode}");
-      print("📥 البيانات المستلمة: ${response.body}");
-
       if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-
-        // ✅ التحقق من وجود المستخدم ضمن الاستجابة لتجنب null
-        if (decoded["status"] == "success" && decoded["user"] != null) {
-          return decoded;
-        } else {
-          return {
-            "status": "error",
-            "message": "⚠ استجابة غير متوقعة من الخادم"
-          };
-        }
+        final data = jsonDecode(response.body);
+        return data; // ✅ يرجع Map مباشرة عشان تستخدمه مع response["status"] و response["user"]
       } else {
-        return {"status": "error", "message": "⚠ فشل في تسجيل الدخول"};
+        return {"status": "error", "message": "⚠ فشل الاتصال بالخادم"};
       }
     } catch (e) {
-      print("❌ خطأ أثناء تسجيل الدخول: $e");
       return {"status": "error", "message": "⚠ خطأ: $e"};
     }
   }
 
-  /// ✅ جلب بيانات المستخدم
-  static Future<Map<String, dynamic>> getUserProfile(int userId) async {
+  static Future<Profile?> getUserProfile(int userId) async {
     try {
       final url = "$baseUrl/profile.php?user_id=$userId";
-
-      print("📡 [PROFILE] إرسال طلب جلب بيانات المستخدم إلى: $url");
-
       final response = await http.get(Uri.parse(url));
 
-      print("🔄 استجابة السيرفر: ${response.statusCode}");
-      print("📥 البيانات المستلمة: ${response.body}");
-
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {"error": "⚠ فشل في جلب بيانات المستخدم"};
+        final data = jsonDecode(response.body);
+        if (data["status"] == "success") {
+          return Profile.fromJson(data["data"]);
+        }
       }
+      return null;
     } catch (e) {
-      print("❌ خطأ أثناء جلب بيانات المستخدم: $e");
-      return {"error": "⚠ خطأ: $e"};
+      return null;
     }
   }
 
-  /// ✅ تحديث بيانات المستخدم
   static Future<Map<String, dynamic>> updateUserProfile(Profile profile) async {
     try {
       final url = "$baseUrl/profile.php";
       final headers = {"Content-Type": "application/json"};
       final body = jsonEncode(profile.toJson());
 
-      print("📡 [UPDATE PROFILE] إرسال طلب التحديث إلى: $url");
-      print("📦 البيانات المرسلة: $body");
-
       final response =
           await http.post(Uri.parse(url), headers: headers, body: body);
-
-      print("🔄 استجابة السيرفر: ${response.statusCode}");
-      print("📥 البيانات المستلمة: ${response.body}");
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        return {"status": "error", "message": "⚠ فشل في تحديث البيانات"};
+        return {"status": "error", "message": "⚠ فشل تحديث البيانات"};
       }
     } catch (e) {
-      print("❌ خطأ أثناء تحديث بيانات المستخدم: $e");
+      return {"status": "error", "message": "⚠ خطأ: $e"};
+    }
+  }
+
+// ✅ تسجيل مستخدم جديد
+  static Future<Map<String, dynamic>> registerUser(
+      String name, String email, String password) async {
+    try {
+      final url = "$baseUrl/register.php"; // مسار ملف التسجيل
+      final headers = {"Content-Type": "application/json"};
+      final body = jsonEncode({
+        "name": name,
+        "email": email,
+        "password": password,
+      });
+
+      final response =
+          await http.post(Uri.parse(url), headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data; // ✅ يرجع Map مباشرة مثل {"status": "success", "message": "تم التسجيل بنجاح"}
+      } else {
+        return {"status": "error", "message": "⚠ فشل في الاتصال بالخادم"};
+      }
+    } catch (e) {
       return {"status": "error", "message": "⚠ خطأ: $e"};
     }
   }
