@@ -1,7 +1,7 @@
-// components/bottom_nav_bar.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../constants/colors.dart'; // ✅ استدعاء الثوابت
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../constants/colors.dart';
 import '../screens/home_screen.dart';
 import '../screens/cart_screen.dart';
 import '../screens/favorites_screen.dart';
@@ -19,22 +19,22 @@ class BottomNavBar extends StatelessWidget {
     Widget nextScreen;
     switch (index) {
       case 0:
-        nextScreen = HomeScreen();
+        nextScreen = const HomeScreen();
         break;
       case 1:
         nextScreen = ChangeNotifierProvider.value(
           value: Provider.of<CartProvider>(context, listen: false),
-          child: CartScreen(),
+          child: const CartScreen(),
         );
         break;
       case 2:
-        nextScreen = FavoritesScreen();
+        nextScreen = const FavoritesScreen();
         break;
       case 3:
-        nextScreen = AccountScreen();
+        nextScreen = const AccountScreen();
         break;
       default:
-        nextScreen = HomeScreen();
+        nextScreen = const HomeScreen();
     }
 
     Navigator.pushReplacement(
@@ -45,37 +45,36 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
     int safeIndex = (currentIndex >= 0 && currentIndex < 4) ? currentIndex : 0;
 
     return BottomNavigationBar(
       currentIndex: safeIndex,
       onTap: (index) => _onItemTapped(context, index),
-      backgroundColor:
-          Theme.of(context).scaffoldBackgroundColor, // ✅ خلفية حسب الثيم
-      selectedItemColor: AppColors.primary, // ✅ لون محدد حسب الثوابت
-      unselectedItemColor:
-          AppColors.textSecondary, // ✅ لون غير محدد حسب الثوابت
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.textSecondary,
       type: BottomNavigationBarType.fixed,
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: "Home",
+          icon: const Icon(Icons.home_outlined),
+          activeIcon: const Icon(Icons.home),
+          label: local.home,
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart_outlined),
-          activeIcon: Icon(Icons.shopping_cart),
-          label: "Cart",
+          icon: const Icon(Icons.shopping_cart_outlined),
+          activeIcon: const Icon(Icons.shopping_cart),
+          label: local.cart,
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.favorite_border),
-          activeIcon: Icon(Icons.favorite),
-          label: "Favorites",
+          icon: const Icon(Icons.favorite_border),
+          activeIcon: const Icon(Icons.favorite),
+          label: local.favorites,
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: "Account",
+          icon: const Icon(Icons.person_outline),
+          activeIcon: const Icon(Icons.person),
+          label: local.account,
         ),
       ],
     );

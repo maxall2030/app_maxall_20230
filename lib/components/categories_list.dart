@@ -1,9 +1,9 @@
-// components/categories_list.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../constants/colors.dart';
 import '../model/categories_data.dart';
 import '../services/api_categories.dart';
-import '../screens/category_products_screen.dart'; // ✅ استيراد صفحة المنتجات
+import '../screens/category_products_screen.dart';
 
 class CategoryList extends StatefulWidget {
   const CategoryList({super.key});
@@ -18,15 +18,17 @@ class _CategoryListState extends State<CategoryList> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = ApiCategories.fetchCategories(); // ✅ جلب الفئات من API
+    _categoriesFuture = ApiCategories.fetchCategories();
   }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Container(
       height: 160,
       padding: const EdgeInsets.symmetric(vertical: 8),
-      color: Theme.of(context).scaffoldBackgroundColor, // ✅ خلفية حسب الثيم
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: FutureBuilder<List<Category>>(
         future: _categoriesFuture,
         builder: (context, snapshot) {
@@ -35,14 +37,14 @@ class _CategoryListState extends State<CategoryList> {
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                "⚠ حدث خطأ أثناء تحميل الفئات!",
+                local.categoriesLoadError,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Text(
-                "⚠ لا توجد فئات متاحة.",
+                local.categoriesEmpty,
                 style: TextStyle(color: AppColors.textSecondary),
               ),
             );
@@ -59,8 +61,9 @@ class _CategoryListState extends State<CategoryList> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CategoryProductsScreen(category: categories[index]),
+                      builder: (context) => CategoryProductsScreen(
+                        category: categories[index],
+                      ),
                     ),
                   );
                 },
@@ -77,9 +80,7 @@ class _CategoryListState extends State<CategoryList> {
                             width: 80,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .background, // ✅ لون خلفية الفئات حسب الثيم
+                              color: Theme.of(context).colorScheme.background,
                               image: const DecorationImage(
                                 image: AssetImage('images/backgroundcat.jpg'),
                                 fit: BoxFit.cover,
@@ -90,8 +91,8 @@ class _CategoryListState extends State<CategoryList> {
                             radius: 30,
                             backgroundImage:
                                 NetworkImage(categories[index].imageUrl),
-                            backgroundColor: Theme.of(context)
-                                .scaffoldBackgroundColor, // ✅ دائرة الخلفية ديناميكية
+                            backgroundColor:
+                                Theme.of(context).scaffoldBackgroundColor,
                           ),
                         ],
                       ),

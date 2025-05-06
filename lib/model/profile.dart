@@ -1,5 +1,5 @@
 class Profile {
-  int userId;
+  int id;
   String email;
   String name;
   String phone;
@@ -7,10 +7,10 @@ class Profile {
   String nationality;
   String gender;
   String address;
-  String profileImage; // ✅ جديد
+  String profileImage;
 
   Profile({
-    required this.userId,
+    required this.id,
     required this.email,
     required this.name,
     required this.phone,
@@ -18,12 +18,12 @@ class Profile {
     required this.nationality,
     required this.gender,
     required this.address,
-    required this.profileImage, // ✅ جديد
+    required this.profileImage,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      userId: json["id"] ?? 0,
+      id: json["id"] ?? 0,
       email: json["email"]?.toString() ?? "",
       name: json["name"]?.toString() ?? "",
       phone: json["phone"]?.toString() ?? "",
@@ -31,13 +31,13 @@ class Profile {
       nationality: json["nationality"]?.toString() ?? "",
       gender: json["gender"]?.toString() ?? "",
       address: json["address"]?.toString() ?? "",
-      profileImage: json["profile_image"]?.toString() ?? "", // ✅ جديد
+      profileImage: json["profile_image"]?.toString() ?? "",
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      "user_id": userId,
+      "id": id,
       "email": email,
       "name": name,
       "phone": phone,
@@ -45,7 +45,7 @@ class Profile {
       "nationality": nationality,
       "gender": gender,
       "address": address,
-      "profile_image": profileImage, // ✅ جديد
+      "profile_image": profileImage,
     };
   }
 }

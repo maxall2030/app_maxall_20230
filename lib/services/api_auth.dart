@@ -20,7 +20,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data; // ✅ يرجع Map مباشرة عشان تستخدمه مع response["status"] و response["user"]
+        return data;
       } else {
         return {"status": "error", "message": "⚠ فشل الاتصال بالخادم"};
       }
@@ -29,9 +29,9 @@ class AuthService {
     }
   }
 
-  static Future<Profile?> getUserProfile(int userId) async {
+  static Future<Profile?> getUserProfile(int id) async {
     try {
-      final url = "$baseUrl/profile.php?user_id=$userId";
+      final url = "$baseUrl/profile.php?id=$id"; // ✅ تم التعديل هنا
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -50,7 +50,16 @@ class AuthService {
     try {
       final url = "$baseUrl/profile.php";
       final headers = {"Content-Type": "application/json"};
-      final body = jsonEncode(profile.toJson());
+
+      final body = jsonEncode({
+        "id": profile.id,
+        "name": profile.name,
+        "email": profile.email,
+        "phone": profile.phone,
+        "address": profile.address,
+        "nationality": profile.nationality,
+        "profile_image": profile.profileImage,
+      });
 
       final response =
           await http.post(Uri.parse(url), headers: headers, body: body);
@@ -65,11 +74,10 @@ class AuthService {
     }
   }
 
-// ✅ تسجيل مستخدم جديد
   static Future<Map<String, dynamic>> registerUser(
       String name, String email, String password) async {
     try {
-      final url = "$baseUrl/register.php"; // مسار ملف التسجيل
+      final url = "$baseUrl/register.php";
       final headers = {"Content-Type": "application/json"};
       final body = jsonEncode({
         "name": name,
@@ -82,7 +90,7 @@ class AuthService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data; // ✅ يرجع Map مباشرة مثل {"status": "success", "message": "تم التسجيل بنجاح"}
+        return data;
       } else {
         return {"status": "error", "message": "⚠ فشل في الاتصال بالخادم"};
       }

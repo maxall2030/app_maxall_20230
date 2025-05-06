@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/addresses_data.dart';
 import '../services/api_address.dart';
-import '../constants/colors.dart'; // ✅ إضافة استدعاء الألوان الموحدة
+import '../constants/colors.dart';
 
 class EditAddressScreen extends StatefulWidget {
   final Address address;
@@ -44,8 +44,7 @@ class _EditAddressScreenState extends State<EditAddressScreen> {
             _textField("الدولة", countryController),
             const Divider(height: 30),
             _sectionTitle("معلوماتك الشخصية"),
-            _readOnlyText("الاسم",
-                "${widget.address.Name ?? ''} ${widget.address.lastName ?? ''}"),
+            _readOnlyText("الاسم", widget.address.name ?? "غير متوفر"),
             _readOnlyText("رقم الجوال", widget.address.phone ?? "غير متوفر"),
             const SizedBox(height: 30),
             ElevatedButton(

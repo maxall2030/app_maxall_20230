@@ -4,7 +4,7 @@ import '../model/addresses_data.dart';
 import 'edit_address_screen.dart';
 import 'add_address_screen.dart';
 import '../utils/user_session.dart';
-import '../constants/colors.dart'; // ✅ استيراد الألوان الثابتة
+import '../constants/colors.dart';
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -26,15 +26,20 @@ class _AddressScreenState extends State<AddressScreen> {
 
   Future<void> _loadUserId() async {
     final id = await UserSession.getUserId();
+    print("📌 user_id الحالي: $id"); // ✅ طباعة الـ id المستخدم
+
     setState(() {
       userId = id;
     });
+
     fetchAddresses();
   }
 
   Future<void> fetchAddresses() async {
     try {
       final fetched = await ApiAddress.fetchAddresses(userId);
+      print("📥 العناوين المستلمة: $fetched"); // ✅ طباعة البيانات المستلمة
+
       setState(() {
         addresses = fetched;
         isLoading = false;
@@ -50,9 +55,7 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget _buildAddressCard(Address address) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       elevation: 6,
       color: Theme.of(context).cardColor,
       child: Padding(
@@ -64,12 +67,11 @@ class _AddressScreenState extends State<AddressScreen> {
               children: [
                 Icon(Icons.location_on, color: AppColors.primary),
                 const SizedBox(width: 8),
-                Text(
-                  "عنوان التوصيل",
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
+                Text("عنوان التوصيل",
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold)),
               ],
             ),
             const SizedBox(height: 8),
@@ -78,25 +80,23 @@ class _AddressScreenState extends State<AddressScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.phone_android, color: AppColors.textSecondary),
-                const SizedBox(width: 8),
-                Text(
-                  address.phone ?? "غير متوفر",
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
+            if (address.phone != null)
+              Row(
+                children: [
+                  Icon(Icons.phone_android, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(address.phone!,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Icon(Icons.date_range, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
                 Text(
-                  "أضيف في: ${address.createdAt.toString().split(' ').first}",
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                    "أضيف في: ${address.createdAt.toString().split(' ').first}",
+                    style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
             const Divider(height: 30),
@@ -108,26 +108,45 @@ class _AddressScreenState extends State<AddressScreen> {
                     final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EditAddressScreen(address: address),
-                      ),
+                          builder: (_) => EditAddressScreen(address: address)),
                     );
                     if (result == true) fetchAddresses();
                   },
-                  icon: const Icon(Icons.edit, size: 18),
-                  label: const Text("تعديل"),
+                  icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                  label: const Text("تعديل",
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                  ),
+                      backgroundColor: AppColors.primary),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () {
-                    // تنفيذ الحذف لاحقاً
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("تأكيد الحذف"),
+                        content: const Text("هل أنت متأكد من حذف هذا العنوان؟"),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text("إلغاء")),
+                          ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red),
+                              child: const Text("حذف"))
+                        ],
+                      ),
+                    );
+                    if (confirmed == true) {
+                      final success =
+                          await ApiAddress.deleteAddress(address.id);
+                      if (success) fetchAddresses();
+                    }
                   },
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   label: const Text("حذف", style: TextStyle(color: Colors.red)),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.red),
-                  ),
+                      side: const BorderSide(color: Colors.red)),
                 ),
               ],
             ),

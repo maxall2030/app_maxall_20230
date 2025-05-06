@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:app_maxall2/services/api_address.dart';
 import 'package:app_maxall2/utils/user_session.dart';
-import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد ملف الألوان
+import 'package:app_maxall2/constants/colors.dart';
 
 class AddAddressScreen extends StatefulWidget {
   const AddAddressScreen({super.key});
@@ -35,13 +35,14 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
     setState(() => isLoading = false);
 
     if (success) {
-      Navigator.pop(context);
+      // ✅ نعيد true لتحديث قائمة العناوين
+      Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("تم إضافة العنوان بنجاح")),
+        const SnackBar(content: Text("✅ تم إضافة العنوان بنجاح")),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("فشل في إضافة العنوان")),
+        const SnackBar(content: Text("⚠ فشل في إضافة العنوان")),
       );
     }
   }
@@ -60,9 +61,9 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField("العنوان", addressController),
-              _buildTextField("المدينة", cityController),
               _buildTextField("الدولة", countryController),
+              _buildTextField("المدينة", cityController),
+              _buildTextField("العنوان", addressController),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: isLoading ? null : _saveAddress,

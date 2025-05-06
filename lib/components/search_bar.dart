@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:app_maxall2/screens/search_screen.dart';
-import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد الثوابت
+import 'package:app_maxall2/constants/colors.dart';
 
 class CustomSearchBar extends StatelessWidget {
   final TextEditingController? controller;
@@ -18,23 +19,22 @@ class CustomSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     Widget searchField = TextField(
       controller: controller,
       onChanged: onChanged,
       autofocus: showBackButton,
-      readOnly: !showBackButton, // ⛔ يمنع الكتابة في الصفحة الرئيسية
+      readOnly: !showBackButton,
       decoration: InputDecoration(
-        hintText: 'ابحث باسم المنتج...',
-        hintStyle:
-            TextStyle(color: AppColors.textSecondary), // ✅ لون النص الإرشادي
-        prefixIcon: Icon(Icons.search,
-            color: AppColors.textSecondary), // ✅ لون الأيقونة
+        hintText: local.searchHint,
+        hintStyle: TextStyle(color: AppColors.textSecondary),
+        prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: Theme.of(context)
-            .scaffoldBackgroundColor, // ✅ لون الخلفية يتغير مع الثيم
+        fillColor: Theme.of(context).scaffoldBackgroundColor,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       ),
     );

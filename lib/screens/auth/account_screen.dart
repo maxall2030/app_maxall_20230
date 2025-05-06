@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'package:app_maxall2/main.dart';
+import 'package:app_maxall2/utils/language_session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:app_maxall2/constants/colors.dart';
@@ -9,112 +12,89 @@ import 'package:app_maxall2/screens/auth/profile_screen.dart';
 import 'package:app_maxall2/screens/qr_code_screen.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/utils/user_session.dart';
+import 'package:app_maxall2/model/profile.dart';
 import 'package:app_maxall2/model/banners_data.dart';
 import 'package:app_maxall2/providers/ThemeProvider.dart';
-import 'package:app_maxall2/viewers/widgets/widget_account.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
-
   @override
   State<AccountScreen> createState() => _AccountScreenState();
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  String userName = "جاري التحميل...";
-  String userEmail = "";
-  String? userProfileImage;
+  Profile? userProfile;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadProfileData();
+    _loadProfile();
   }
 
-  Future<void> _loadProfileData() async {
+  Future<void> _loadProfile() async {
     final userId = await UserSession.getUserId();
     final profile = await AuthService.getUserProfile(userId);
-
-    if (profile != null) {
-      setState(() {
-        userName = profile.name;
-        userEmail = profile.email;
-        userProfileImage = profile.profileImage;
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        userName = "مستخدم غير معروف";
-        userEmail = "";
-        userProfileImage = null;
-        isLoading = false;
-      });
-    }
+    setState(() {
+      userProfile = profile;
+      isLoading = false;
+    });
   }
 
-  ImageProvider getProfileImage() {
+  ImageProvider _getProfileImageProvider(String? base64String) {
     try {
-      if (userProfileImage != null && userProfileImage!.isNotEmpty) {
-        final normalizedBase64 = base64Normalize(userProfileImage!);
-        final bytes = base64Decode(normalizedBase64);
-        return MemoryImage(bytes);
-      } else {
-        return const AssetImage('assets/User.png');
+      if (base64String != null && base64String.isNotEmpty) {
+        final normalized = _normalizeBase64(base64String);
+        return MemoryImage(base64Decode(normalized));
       }
-    } catch (e) {
-      print('⚠️ خطأ أثناء فك تشفير الصورة: $e');
-      return const AssetImage('assets/User.png');
-    }
+    } catch (_) {}
+    return const AssetImage("assets/User.png");
   }
 
-  String base64Normalize(String base64String) {
-    int remainder = base64String.length % 4;
-    if (remainder != 0) {
-      base64String += '=' * (4 - remainder);
-    }
-    return base64String;
+  String _normalizeBase64(String str) {
+    int mod = str.length % 4;
+    if (mod > 0) str += '=' * (4 - mod);
+    return str;
   }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       bottomNavigationBar: BottomNavBar(currentIndex: 3),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfileScreen()));
-                },
-                child: _buildProfileHeader(),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const ProfileScreen()),
+                      ),
+                      child: _buildHeader(local),
+                    ),
+                    _buildPromoBanner(local),
+                    _buildAdvertisement(),
+                    const SizedBox(height: 8),
+                    _buildAccountOptions(local),
+                    _buildSettings(local, themeProvider),
+                    _buildSignOutButton(local),
+                    _buildSocialLinks(),
+                    _buildFooter(),
+                  ],
+                ),
               ),
-              _buildPromoBanner(),
-              const AccountSummaryWidget(),
-              _buildAdvertisement(),
-              _buildAccountOptions(context),
-              _buildSettings(),
-              _buildSignOutButton(),
-              _buildSocialLinks(),
-              _buildFooter(),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
-    final ImageProvider imageProvider =
-        (userProfileImage != null && userProfileImage!.isNotEmpty)
-            ? MemoryImage(base64Decode(base64Normalize(userProfileImage!)))
-            : const AssetImage('assets/User.png');
-
+  Widget _buildHeader(AppLocalizations local) {
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -127,122 +107,52 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ),
         ),
-        Container(
-          height: 150,
-          color: AppColors.primary.withOpacity(0.3),
-        ),
+        Container(height: 150, color: AppColors.primary.withOpacity(0.3)),
         Positioned(
           bottom: 10,
-          left: 5,
-          right: 5,
-          top: 20,
+          left: 10,
+          right: 10,
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor.withOpacity(0.9),
+              color: Theme.of(context).cardColor.withOpacity(0.95),
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ],
             ),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 35,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: getProfileImage(),
+                  radius: 30,
+                  backgroundImage:
+                      _getProfileImageProvider(userProfile?.profileImage),
                 ),
-                const SizedBox(width: 9),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              userName,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
-                                    ?.color,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              userEmail,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.color
-                                    ?.withOpacity(0.8),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(userProfile?.name ?? local.profile,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(userProfile?.email ?? "",
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    ],
+                  ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.qr_code,
-                      size: 26, color: Colors.deepPurple),
+                  icon: const Icon(Icons.qr_code, color: Colors.deepPurple),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              const QRCodeScreen(userData: '1234')),
+                          builder: (_) => const QRCodeScreen(userData: '1234')),
                     );
                   },
-                ),
+                )
               ],
             ),
           ),
-        ),
+        )
       ],
-    );
-  }
-
-  Widget _buildPromoBanner() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary,
-            Theme.of(context).scaffoldBackgroundColor
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Row(
-            children: [
-              Icon(Icons.play_circle_fill, color: Colors.red),
-              SizedBox(width: 5),
-              Text("Try Free",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          Text("Unlimited free delivery",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        ],
-      ),
     );
   }
 
@@ -272,79 +182,97 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildAccountOptions(BuildContext context) {
-    return _buildListSection("My account", [
-      _buildListItem("Account", Icons.person, context, const ProfileScreen()),
-      _buildListItem(
-          "Addresses", Icons.location_on, context, const AddressScreen()),
-    ]);
-  }
-
-  Widget _buildSettings() {
-    return _buildListSection("Settings", [
-      _buildThemeToggle(),
-      _buildListItem("Security", Icons.security, null, null),
-      _buildListItem("Notifications", Icons.notifications, null, null),
-    ]);
-  }
-
-  Widget _buildThemeToggle() {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark;
-
-    return ListTile(
-      leading: Icon(Icons.brightness_6, color: AppColors.primary),
-      title: Text("الوضع الليلي",
-          style:
-              TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)),
-      trailing: Switch(
-        value: isDark,
-        onChanged: (value) => themeProvider.toggleTheme(value),
-        activeColor: AppColors.primary,
+  Widget _buildPromoBanner(AppLocalizations local) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(children: [
+            const Icon(Icons.play_circle_fill, color: Colors.red),
+            const SizedBox(width: 5),
+            Text(local.promoTryFree,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+          ]),
+          Text(local.promoDelivery,
+              style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
 
-  Widget _buildListItem(
-      String title, IconData icon, BuildContext? context, Widget? screen) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: Theme.of(this.context).textTheme.bodyLarge?.color,
-          fontWeight: FontWeight.bold,
+  Widget _buildAccountOptions(AppLocalizations local) {
+    return _buildListSection(local.account, [
+      _buildListItem(local.profile, Icons.person, const ProfileScreen()),
+      _buildListItem(local.addresses, Icons.location_on, const AddressScreen()),
+    ]);
+  }
+
+  Widget _buildSettings(AppLocalizations local, ThemeProvider themeProvider) {
+    final isDark = themeProvider.themeMode == ThemeMode.dark;
+    return _buildListSection(local.settings, [
+      ListTile(
+        leading: Icon(Icons.brightness_6, color: AppColors.primary),
+        title: Text(local.darkMode),
+        trailing: Switch(
+          value: isDark,
+          onChanged: themeProvider.toggleTheme,
+          activeColor: AppColors.primary,
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-      onTap: () {
-        if (context != null && screen != null) {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => screen));
-        }
-      },
+      ListTile(
+        leading: Icon(Icons.language, color: AppColors.primary),
+        title: Text(local.language),
+        trailing: DropdownButton<String>(
+          value: Localizations.localeOf(context).languageCode,
+          items: const [
+            DropdownMenuItem(value: 'ar', child: Text("العربية")),
+            DropdownMenuItem(value: 'en', child: Text("English")),
+          ],
+          onChanged: (String? newLang) async {
+            if (newLang != null) {
+              await LanguageSession.saveLanguage(newLang);
+              MyApp.setLocale(context, Locale(newLang));
+            }
+          },
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildListItem(String title, IconData icon, Widget screen) {
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () =>
+          Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
     );
   }
 
   Widget _buildListSection(String title, List<Widget> items) {
     return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).textTheme.bodyLarge?.color)),
-          ),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const Divider(),
           Column(children: items),
         ],
@@ -352,50 +280,38 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildSignOutButton() {
-    return GestureDetector(
-      onTap: () async {
-        await UserSession.clearUserId();
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed('/login');
-      },
-      child: Container(
-        margin: const EdgeInsets.all(12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(10),
+  Widget _buildSignOutButton(AppLocalizations local) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red.shade400,
+          minimumSize: const Size.fromHeight(50),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("تسجيل الخروج",
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).textTheme.bodyLarge?.color)),
-              const SizedBox(width: 5),
-              const Icon(Icons.power_settings_new, color: Colors.red),
-            ],
-          ),
-        ),
+        onPressed: () async {
+          await UserSession.clearUserId();
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed('/login');
+        },
+        icon: const Icon(Icons.power_settings_new),
+        label: Text(local.logout),
       ),
     );
   }
 
   Widget _buildSocialLinks() {
     return Column(
-      children: [
-        const SizedBox(height: 10),
+      children: const [
+        SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.public, size: 30, color: Colors.grey),
+          children: [
+            Icon(Icons.facebook, color: Colors.grey, size: 30),
             SizedBox(width: 15),
-            Icon(Icons.camera_alt, size: 30, color: Colors.grey),
+            Icon(Icons.alternate_email, color: Colors.grey, size: 30),
             SizedBox(width: 15),
-            Icon(Icons.alternate_email, size: 30, color: Colors.grey),
+            Icon(Icons.public, color: Colors.grey, size: 30),
           ],
         ),
       ],
@@ -405,7 +321,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildFooter() {
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Text("© 2025 maxall.com. All rights reserved.",
+      child: Text("\u00a9 2025 maxall.com. جميع الحقوق محفوظة.",
           style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
     );
   }

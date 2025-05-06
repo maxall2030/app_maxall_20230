@@ -1,21 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app_maxall2/constants/colors.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
+import 'package:app_maxall2/model/profile.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/utils/user_session.dart';
-import 'package:app_maxall2/model/profile.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _EditProfileScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> {
   Profile? userProfile;
   bool isLoading = true;
   File? _selectedImage;
@@ -23,10 +24,10 @@ class _EditProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserProfile();
+    _loadProfile();
   }
 
-  Future<void> _loadUserProfile() async {
+  Future<void> _loadProfile() async {
     final userId = await UserSession.getUserId();
     final profile = await AuthService.getUserProfile(userId);
     setState(() {
@@ -35,182 +36,271 @@ class _EditProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _updateProfile() async {
+    if (userProfile == null) return;
+    final result = await AuthService.updateUserProfile(userProfile!);
+    final local = AppLocalizations.of(context)!;
+
+    if (result["status"] == "success") {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.profileUpdated)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${local.error}: ${result["message"]}")),
+      );
+    }
+  }
+
+  Future<void> _pickImageFromSource(ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        userProfile?.profileImage = base64Encode(bytes);
         _selectedImage = File(pickedFile.path);
+        userProfile?.profileImage = base64Encode(bytes);
       });
-      _updateUserProfile();
+      _updateProfile();
     }
   }
 
-  Future<void> _deleteImage() async {
-    final confirm = await showDialog(
+  void _showImageOptions() {
+    final local = AppLocalizations.of(context)!;
+
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("تأكيد حذف الصورة"),
-        content: const Text("هل أنت متأكد أنك تريد حذف الصورة الشخصية؟"),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text("إلغاء")),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("حذف")),
-        ],
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(local.chooseFromGallery),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromSource(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(local.takePhoto),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImageFromSource(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.visibility),
+              title: Text(local.viewImage),
+              onTap: () {
+                Navigator.pop(context);
+                _showFullImage();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: Text(local.deleteImage),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDeleteImage();
+              },
+            ),
+          ],
+        ),
       ),
     );
+  }
 
-    if (confirm == true) {
-      setState(() {
-        userProfile?.profileImage = "";
-        _selectedImage = null;
-      });
-      _updateUserProfile();
+  void _showFullImage() {
+    final local = AppLocalizations.of(context)!;
+
+    if (userProfile?.profileImage == null ||
+        userProfile!.profileImage.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.noImageAvailable)),
+      );
+      return;
     }
-  }
 
-  Future<void> _updateUserProfile() async {
-    if (userProfile == null) return;
-    await AuthService.updateUserProfile(userProfile!);
-  }
-
-  void _editField(String fieldName, String currentValue) {
-    final controller = TextEditingController(text: currentValue);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("تعديل $fieldName"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: InteractiveViewer(
+          child: Image.memory(
+            base64Decode(base64Normalize(userProfile!.profileImage)),
+          ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteImage() {
+    final local = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(local.confirmDeleteTitle),
+        content: Text(local.confirmDeleteBody),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("إلغاء")),
+              child: Text(local.cancel)),
           ElevatedButton(
             onPressed: () {
-              _saveEditedField(fieldName, controller.text);
               Navigator.pop(context);
+              _deleteProfileImage();
             },
-            child: const Text("حفظ"),
+            child: Text(local.confirm),
           ),
         ],
       ),
     );
   }
 
-  void _saveEditedField(String field, String value) {
+  void _deleteProfileImage() {
     setState(() {
-      switch (field) {
-        case 'الاسم':
-          userProfile?.name = value;
-          break;
-        case 'رقم الجوال':
-          userProfile?.phone = value;
-          break;
-        case 'الجنسية':
-          userProfile?.nationality = value;
-          break;
-        case 'العنوان':
-          userProfile?.address = value;
-          break;
-      }
+      userProfile?.profileImage = "";
+      _selectedImage = null;
     });
-    _updateUserProfile();
+    _updateProfile();
+  }
+
+  void _editField(String title, String key, String value) {
+    final local = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: value);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("${local.edit} $title"),
+        content: TextField(controller: controller),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(local.cancel)),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                switch (key) {
+                  case "name":
+                    userProfile?.name = controller.text;
+                    break;
+                  case "phone":
+                    userProfile?.phone = controller.text;
+                    break;
+                  case "address":
+                    userProfile?.address = controller.text;
+                    break;
+                  case "nationality":
+                    userProfile?.nationality = controller.text;
+                    break;
+                }
+              });
+              Navigator.pop(context);
+              _updateProfile();
+            },
+            child: Text(local.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ImageProvider _getImageProvider() {
+    try {
+      if (_selectedImage != null) {
+        return FileImage(_selectedImage!);
+      } else if (userProfile?.profileImage != null &&
+          userProfile!.profileImage.isNotEmpty) {
+        final normalized = base64Normalize(userProfile!.profileImage);
+        return MemoryImage(base64Decode(normalized));
+      }
+    } catch (e) {
+      debugPrint("⚠️ فشل في تحميل الصورة: $e");
+    }
+    return const AssetImage('assets/User.png');
+  }
+
+  String base64Normalize(String str) {
+    int pad = str.length % 4;
+    if (pad > 0) str += '=' * (4 - pad);
+    return str;
   }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("تعديل الملف الشخصي"),
+        title: Text(local.profile),
         backgroundColor: AppColors.primary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            onPressed: _deleteImage,
-          ),
-        ],
       ),
       bottomNavigationBar: BottomNavBar(currentIndex: 2),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+          : ListView(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Center(
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundImage: _selectedImage != null
-                              ? FileImage(_selectedImage!)
-                              : (userProfile?.profileImage.isNotEmpty ?? false)
-                                  ? MemoryImage(
-                                      base64Decode(base64Normalize(
-                                          userProfile!.profileImage)),
-                                    )
-                                  : const AssetImage('assets/User.png')
-                                      as ImageProvider,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _pickImage,
-                            child: const CircleAvatar(
-                              backgroundColor: Colors.white,
-                              child: Icon(Icons.edit, color: Colors.deepPurple),
+              children: [
+                Center(
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      CircleAvatar(
+                        radius: 55,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: _getImageProvider(),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 4,
+                        child: InkWell(
+                          onTap: _showImageOptions,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: Colors.grey),
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.edit,
+                                size: 18, color: Colors.deepPurple),
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      )
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  _buildEditableField("الاسم", userProfile?.name ?? ""),
-                  _buildEditableField(
-                      "البريد الإلكتروني", userProfile?.email ?? "",
-                      editable: false),
-                  _buildEditableField("رقم الجوال", userProfile?.phone ?? ""),
-                  _buildEditableField(
-                      "الجنسية", userProfile?.nationality ?? ""),
-                  _buildEditableField("العنوان", userProfile?.address ?? ""),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                _buildField(local.name, userProfile?.name ?? "", 'name'),
+                _buildField(local.email, userProfile?.email ?? "", null),
+                _buildField(local.phone, userProfile?.phone ?? "", 'phone'),
+                _buildField(local.nationality,
+                    userProfile?.nationality ?? "", 'nationality'),
+                _buildField(local.address, userProfile?.address ?? "", 'address'),
+              ],
             ),
     );
   }
 
-  Widget _buildEditableField(String label, String value,
-      {bool editable = true}) {
+  Widget _buildField(String title, String value, String? key) {
+    final local = AppLocalizations.of(context)!;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: ListTile(
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(value.isEmpty ? "غير متوفر" : value),
-        trailing: editable
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text(value.isEmpty ? local.notAvailable : value),
+        trailing: key != null
             ? IconButton(
                 icon: const Icon(Icons.edit, color: Colors.deepPurple),
-                onPressed: () => _editField(label, value),
+                onPressed: () => _editField(title, key, value),
               )
             : null,
       ),
     );
-  }
-
-  String base64Normalize(String input) {
-    int remainder = input.length % 4;
-    if (remainder != 0) {
-      input += '=' * (4 - remainder);
-    }
-    return input;
   }
 }

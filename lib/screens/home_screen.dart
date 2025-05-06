@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:app_maxall2/components/bottom_nav_bar.dart';
 import 'package:app_maxall2/components/categories_list.dart';
@@ -46,11 +47,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       bottomNavigationBar: BottomNavBar(currentIndex: 0),
       body: CustomScrollView(
         slivers: [
-          // ✅ خلفية الصورة مع شريط البحث المنخفض
           SliverAppBar(
             pinned: true,
             expandedHeight: 150,
@@ -70,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       end: Alignment.topCenter,
                       colors: [
                         Theme.of(context).brightness == Brightness.dark
-                            ? Colors.black.withOpacity(0.9) // الوضع الليلي
-                            : Colors.white.withOpacity(0.9), // الوضع النهاري
+                            ? Colors.black.withOpacity(0.9)
+                            : Colors.white.withOpacity(0.9),
                         Colors.transparent,
                       ],
                     ),
@@ -101,8 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: 'TOP DEALS IN ',
-                          style: TextStyle(
+                          text: "${local.topDealsIn} ",
+                          style: const TextStyle(
                             color: Colors.blue,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -110,8 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         TextSpan(
-                          text: 'ELECTRONICS',
-                          style: TextStyle(
+                          text: local.electronics,
+                          style: const TextStyle(
                             color: Colors.black87,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -129,9 +131,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     onPressed: () {},
-                    child: const Text(
-                      'VIEW ALL',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    child: Text(
+                      local.viewAll,
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ],
@@ -167,9 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "منتجات مميزة",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    local.featuredProducts,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
@@ -188,9 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "الأكثر مبيعًا",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    local.bestSellers,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

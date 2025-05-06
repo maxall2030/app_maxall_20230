@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../screens/product_screen.dart';
 import '../constants/colors.dart';
 import '../model/products_data.dart';
@@ -32,6 +33,7 @@ class _ProductCardState extends State<ProductCard> {
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    final local = AppLocalizations.of(context)!;
     int userId = 2;
 
     return GestureDetector(
@@ -48,7 +50,7 @@ class _ProductCardState extends State<ProductCard> {
       child: Container(
         margin: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor, // ✅ دعم الوضع الليلي تلقائيًا
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -74,7 +76,7 @@ class _ProductCardState extends State<ProductCard> {
                     errorBuilder: (context, error, stackTrace) => Icon(
                       Icons.image_not_supported,
                       size: 80,
-                      color: AppColors.textSecondary, // ✅ لون الأيقونة
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -88,15 +90,13 @@ class _ProductCardState extends State<ProductCard> {
                             userId, widget.product.id);
                         if (success) {
                           setState(() => isFavorite = !isFavorite);
-                          if (widget.onFavoriteToggle != null) {
-                            widget.onFavoriteToggle!();
-                          }
+                          widget.onFavoriteToggle?.call();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
                                 isFavorite
-                                    ? "✅ تمت الإضافة إلى المفضلة"
-                                    : "❌ تمت الإزالة من المفضلة",
+                                    ? local.addedToFavorites
+                                    : local.removedFromFavorites,
                               ),
                               backgroundColor:
                                   isFavorite ? Colors.green : Colors.red,
@@ -125,7 +125,8 @@ class _ProductCardState extends State<ProductCard> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                "🛒 ${widget.product.name} تمت إضافته إلى السلة!"),
+                              "🛒 ${widget.product.name} ${local.addedToCart}",
+                            ),
                             backgroundColor: Colors.green,
                             duration: const Duration(seconds: 2),
                           ),
