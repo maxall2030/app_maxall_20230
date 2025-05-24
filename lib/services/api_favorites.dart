@@ -1,4 +1,3 @@
-// services/api_favorites.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/products_data.dart';
@@ -36,7 +35,9 @@ class ApiFavorites {
     );
 
     final data = jsonDecode(response.body);
-    return data["status"] ==
-        "added"; // true إذا تمت الإضافة، false إذا تم الحذف
+
+    // ✅ نتحقق من message وليس status
+    return data["message"] ==
+        "added"; // true = تمت الإضافة، false = تمت الإزالة
   }
 }

@@ -1,5 +1,13 @@
 {
   "@@locale": "en",
+    "signUp": "Sign up",
+  "confirmPassword": "Confirm Password",
+  "termsAndConditions": "I agree to the Terms and Conditions",
+  "signUpButton": "Sign Up",
+  "emailInvalid": "Please enter a valid email address",
+  "invalidEmail": "Please enter a valid email address",
+  "passwordMismatch": "Passwords do not match",
+  "acceptTermsError": "You must accept the terms and conditions",
   "home": "Home",
   "cart": "Cart",
   "favorites": "Favorites",
@@ -65,5 +73,14 @@
   "deleteConfirmMessage": "Are you sure you want to delete this address?",
   "addressAdded": "✅ Address added successfully",
   "addressAddFailed": "⚠ Failed to add address",
-  "requiredField": "This field is required"
+  "requiredField": "This field is required",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "loginToContinue": "🔒 You must log in first",
+"addToCart": "Add to Cart",
+"failedToAdd": "❌ Failed to add to cart",
+"swap": "Swap",
+"bestSeller": "Best Seller",
+"soldRecently": "sold recently"
+
 }

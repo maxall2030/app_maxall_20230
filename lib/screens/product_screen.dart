@@ -1,16 +1,62 @@
-import 'package:app_maxall2/services/api_cart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../constants/colors.dart';
 import '../model/products_data.dart';
+import 'package:app_maxall2/services/api_cart.dart';
+import 'package:app_maxall2/services/api_favorites.dart';
+import 'package:app_maxall2/utils/user_session.dart';
 
-class ProductScreen extends StatelessWidget {
+class ProductScreen extends StatefulWidget {
   final Product product;
-  final int userId = 1;
 
   const ProductScreen({super.key, required this.product});
 
   @override
+  State<ProductScreen> createState() => _ProductScreenState();
+}
+
+class _ProductScreenState extends State<ProductScreen> {
+  int? userId;
+  bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUser();
+  }
+
+  Future<void> loadUser() async {
+    userId = await UserSession.getUserId();
+    setState(() {});
+  }
+
+  Future<void> handleToggleFavorite() async {
+    final local = AppLocalizations.of(context)!;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.loginToContinue)),
+      );
+      return;
+    }
+
+    final added = await ApiFavorites.toggleFavorite(userId!, widget.product.id);
+    setState(() => isFavorite = added);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            Text(added ? local.addedToFavorites : local.removedFromFavorites),
+        backgroundColor: added ? Colors.green : Colors.orange,
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.primary,
@@ -18,15 +64,14 @@ class ProductScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
-            onPressed: () {
-              // منطق المشاركة هنا
-            },
+            onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.white),
-            onPressed: () {
-              // منطق الإضافة إلى المفضلة هنا
-            },
+            icon: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: Colors.white,
+            ),
+            onPressed: handleToggleFavorite,
           ),
         ],
       ),
@@ -38,17 +83,28 @@ class ProductScreen extends StatelessWidget {
             Expanded(
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                label: const Text("أضف إلى السلة"),
+                label: Text(local.addToCart),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                 ),
                 onPressed: () async {
-                  bool success = await ApiCart.addToCart(userId, product.id, 1);
+                  if (userId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(local.loginToContinue),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  final success =
+                      await ApiCart.addToCart(userId!, product.id, 1);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(success
-                          ? "✅ تم إضافة المنتج إلى السلة!"
-                          : "❌ فشل في إضافة المنتج إلى السلة."),
+                      content: Text(
+                        success ? local.addedToCart : local.failedToAdd,
+                      ),
                       backgroundColor: success ? Colors.green : Colors.red,
                     ),
                   );
@@ -59,12 +115,12 @@ class ProductScreen extends StatelessWidget {
             Expanded(
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.swap_horiz, color: Colors.white),
-                label: const Text("مبادلة"),
+                label: Text(local.swap),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
                 ),
                 onPressed: () {
-                  // منطق المبادلة هنا
+                  // منطق المبادلة
                 },
               ),
             ),
@@ -98,12 +154,13 @@ class ProductScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
                 children: [
-                  const Text(
-                    "Apple",
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold),
+                  Text(
+                    product.brand,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Spacer(),
                   Container(
@@ -113,9 +170,9 @@ class ProductScreen extends StatelessWidget {
                       color: Colors.black.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      'الأكثر مبيعًا',
-                      style: TextStyle(color: Colors.white, fontSize: 10),
+                    child: Text(
+                      local.bestSeller,
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
                     ),
                   ),
                 ],
@@ -139,9 +196,9 @@ class ProductScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.star, color: Colors.green, size: 16),
                   const SizedBox(width: 4),
-                  const Text(
-                    '4.5 (2.2K)',
-                    style: TextStyle(color: Colors.green, fontSize: 12),
+                  Text(
+                    '${product.rating} (${product.reviews}+)',
+                    style: const TextStyle(color: Colors.green, fontSize: 12),
                   ),
                 ],
               ),
@@ -183,7 +240,7 @@ class ProductScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Text(
-                '2200+ تم البيع مؤخراً',
+                '${product.sold}+ ${local.soldRecently}',
                 style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12,

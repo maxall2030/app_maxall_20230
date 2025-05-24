@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/screens/auth/login_screen.dart';
-import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد ملف الألوان
+import 'package:app_maxall2/constants/colors.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -12,14 +13,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
   bool isLoading = false;
   bool isPasswordVisible = false;
   bool agreeToTerms = false;
 
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
   Future<void> _register() async {
+    final local = AppLocalizations.of(context)!;
+    final email = emailController.text.trim();
+
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.invalidEmail)),
+      );
+      return;
+    }
+
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.passwordMismatch)),
+      );
+      return;
+    }
+
     if (!agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("يجب الموافقة على الشروط والأحكام")),
+        SnackBar(content: Text(local.acceptTermsError)),
       );
       return;
     }
@@ -27,10 +49,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => isLoading = true);
     final response = await AuthService.registerUser(
       nameController.text,
-      emailController.text,
+      email,
       passwordController.text,
     );
-
     setState(() => isLoading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -47,45 +68,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
-          _buildTopDesign(),
+          _buildTopBackground(theme),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: ListView(
+              padding: const EdgeInsets.only(top: 200, bottom: 20),
               children: [
-                Text(
-                  "إنشاء حساب",
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
+                Text(local.signUp,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    )),
                 const SizedBox(height: 10),
-                Text(
-                  "أهلاً وسهلاً! قم بإنشاء حساب للمتابعة.",
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(local.createAccount, style: theme.textTheme.bodyMedium),
                 const SizedBox(height: 30),
-                _buildTextField("الاسم", Icons.person, nameController),
+                _buildTextField(local.name, Icons.person, nameController),
                 const SizedBox(height: 20),
-                _buildTextField(
-                    "البريد الإلكتروني", Icons.email, emailController),
+                _buildTextField(local.email, Icons.email, emailController),
                 const SizedBox(height: 20),
-                _buildPasswordField(),
+                _buildPasswordField(local),
+                const SizedBox(height: 20),
+                _buildConfirmPasswordField(local),
                 const SizedBox(height: 10),
-                _buildAgreeToTerms(),
+                _buildAgreeToTerms(theme, local),
                 const SizedBox(height: 20),
                 isLoading
-                    ? const CircularProgressIndicator()
-                    : _buildRegisterButton(),
-                const SizedBox(height: 15),
-                _buildSocialLogin(),
-                const SizedBox(height: 20),
-                _buildLoginText(context),
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildRegisterButton(local),
+                const SizedBox(height: 30),
+                _buildLoginText(context, local),
               ],
             ),
           ),
@@ -94,24 +111,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildTopDesign() {
+  Widget _buildTopBackground(ThemeData theme) {
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
       child: Container(
-        height: 150,
+        height: 220,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+            colors: [AppColors.primary, AppColors.primary.withOpacity(0.85)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(40),
-            bottomRight: Radius.circular(40),
-          ),
         ),
+        child: Stack(
+          children: [
+            Positioned(top: 40, left: 30, child: _buildCircle(60)),
+            Positioned(top: 20, right: 50, child: _buildCircle(40)),
+            Positioned(top: 100, left: 80, child: _buildCircle(25)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircle(double size) {
+    return Container(
+      height: size,
+      width: size,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white24,
       ),
     );
   }
@@ -128,105 +159,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(AppLocalizations local) {
     return TextField(
       controller: passwordController,
       obscureText: !isPasswordVisible,
       decoration: InputDecoration(
-        labelText: "كلمة المرور",
+        labelText: local.password,
         prefixIcon: Icon(Icons.lock, color: AppColors.primary),
         suffixIcon: IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: AppColors.textSecondary,
+            color: Colors.grey,
           ),
-          onPressed: () {
-            setState(() {
-              isPasswordVisible = !isPasswordVisible;
-            });
-          },
+          onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  Widget _buildAgreeToTerms() {
+  Widget _buildConfirmPasswordField(AppLocalizations local) {
+    return TextField(
+      controller: confirmPasswordController,
+      obscureText: true,
+      decoration: InputDecoration(
+        labelText: local.confirmPassword,
+        prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Widget _buildAgreeToTerms(ThemeData theme, AppLocalizations local) {
     return Row(
       children: [
         Checkbox(
           value: agreeToTerms,
           activeColor: AppColors.primary,
-          onChanged: (value) {
-            setState(() {
-              agreeToTerms = value!;
-            });
-          },
+          onChanged: (value) => setState(() => agreeToTerms = value!),
         ),
-        Text("أوافق على الشروط والأحكام",
-            style: Theme.of(context).textTheme.bodyMedium),
+        Expanded(
+          child: Text(local.termsAndConditions,
+              style: theme.textTheme.bodySmall),
+        ),
       ],
     );
   }
 
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(AppLocalizations local) {
     return ElevatedButton(
       onPressed: _register,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 100),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: const Text("تسجيل",
-          style: TextStyle(fontSize: 18, color: Colors.white)),
+      child: Text(local.signUp,
+          style: const TextStyle(fontSize: 16, color: Colors.white)),
     );
   }
 
-  Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildSocialIcon("assets/facebook.png"),
-        const SizedBox(width: 15),
-        _buildSocialIcon("assets/twitter.png"),
-        const SizedBox(width: 15),
-        _buildSocialIcon("assets/google.png"),
-      ],
-    );
-  }
-
-  Widget _buildSocialIcon(String assetPath) {
-    return InkWell(
-      onTap: () {},
-      child: CircleAvatar(
-        backgroundColor: Theme.of(context).cardColor,
-        radius: 22,
-        child: Image.asset(assetPath, width: 24),
-      ),
-    );
-  }
-
-  Widget _buildLoginText(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      },
-      child: Text.rich(
-        TextSpan(
-          text: "لديك حساب بالفعل؟ ",
-          style: Theme.of(context).textTheme.bodyMedium,
-          children: [
-            TextSpan(
-              text: "تسجيل الدخول",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+  Widget _buildLoginText(BuildContext context, AppLocalizations local) {
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => LoginScreen()),
+          );
+        },
+        child: Text.rich(
+          TextSpan(
+            text: "${local.alreadyHaveAccount} ",
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              TextSpan(
+                text: local.login,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

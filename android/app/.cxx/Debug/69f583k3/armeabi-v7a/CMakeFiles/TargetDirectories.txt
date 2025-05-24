@@ -1,0 +1,2 @@
+D:/MaxAll/app_maxall_20230/android/app/.cxx/Debug/69f583k3/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/MaxAll/app_maxall_20230/android/app/.cxx/Debug/69f583k3/armeabi-v7a/CMakeFiles/rebuild_cache.dir

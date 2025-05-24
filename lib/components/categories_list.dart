@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../constants/colors.dart';
 import '../model/categories_data.dart';
 import '../services/api_categories.dart';
-import '../screens/category_products_screen.dart';
+import '../screens/subcategories_screen.dart';
 
 class CategoryList extends StatefulWidget {
   const CategoryList({super.key});
@@ -18,7 +18,7 @@ class _CategoryListState extends State<CategoryList> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = ApiCategories.fetchCategories();
+    _categoriesFuture = ApiCategories.getAllCategories();
   }
 
   @override
@@ -26,7 +26,7 @@ class _CategoryListState extends State<CategoryList> {
     final local = AppLocalizations.of(context)!;
 
     return Container(
-      height: 160,
+      height: 180,
       padding: const EdgeInsets.symmetric(vertical: 8),
       color: Theme.of(context).scaffoldBackgroundColor,
       child: FutureBuilder<List<Category>>(
@@ -50,55 +50,82 @@ class _CategoryListState extends State<CategoryList> {
             );
           }
 
-          final categories = snapshot.data!;
+          final categories =
+              snapshot.data!.where((cat) => cat.parentId == null).toList();
 
-          return ListView.builder(
+          return ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
+              final category = categories[index];
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CategoryProductsScreen(
-                        category: categories[index],
+                      builder: (_) => SubcategoriesScreen(
+                        mainCategory: category,
                       ),
                     ),
                   );
                 },
                 child: Container(
                   width: 100,
-                  margin: const EdgeInsets.symmetric(horizontal: 5),
                   child: Column(
                     children: [
                       Stack(
                         alignment: Alignment.center,
                         children: [
                           Container(
-                            height: 80,
-                            width: 80,
+                            height: 90,
+                            width: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Theme.of(context).colorScheme.background,
-                              image: const DecorationImage(
-                                image: AssetImage('images/backgroundcat.jpg'),
-                                fit: BoxFit.cover,
-                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
                           ),
                           CircleAvatar(
-                            radius: 30,
-                            backgroundImage:
-                                NetworkImage(categories[index].imageUrl),
+                            radius: 36,
                             backgroundColor:
                                 Theme.of(context).scaffoldBackgroundColor,
+                            child: ClipOval(
+                              child: (category.imageUrl.trim().isEmpty ||
+                                      category.imageUrl.trim() == 'https://')
+                                  ? Image.asset(
+                                      'assets/icon/B_MaxAll.png',
+                                      fit: BoxFit.cover,
+                                      width: 65,
+                                      height: 65,
+                                    )
+                                  : Image.network(
+                                      category.imageUrl,
+                                      fit: BoxFit.cover,
+                                      width: 65,
+                                      height: 65,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Image.asset(
+                                          'assets/icon/B_MaxAll.png',
+                                          fit: BoxFit.cover,
+                                          width: 65,
+                                          height: 65,
+                                        );
+                                      },
+                                    ),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
                       Text(
-                        categories[index].name,
+                        category.name,
                         style: TextStyle(
                           color: AppColors.textPrimary,
                           fontSize: 14,
