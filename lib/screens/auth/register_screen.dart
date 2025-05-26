@@ -5,144 +5,104 @@ import 'package:app_maxall2/screens/auth/login_screen.dart';
 import 'package:app_maxall2/constants/colors.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  bool isLoading = false;
   bool isPasswordVisible = false;
+  bool isLoading = false;
   bool agreeToTerms = false;
 
   final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   Future<void> _register() async {
     final local = AppLocalizations.of(context)!;
-    final email = emailController.text.trim();
 
-    if (!emailRegex.hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(local.invalidEmail)),
-      );
+    if (!emailRegex.hasMatch(emailController.text.trim())) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(local.invalidEmail)));
       return;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(local.passwordMismatch)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(local.passwordMismatch)));
       return;
     }
 
     if (!agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(local.acceptTermsError)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(local.acceptTermsError)));
       return;
     }
 
     setState(() => isLoading = true);
     final response = await AuthService.registerUser(
       nameController.text,
-      email,
+      emailController.text,
       passwordController.text,
     );
     setState(() => isLoading = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response["message"])),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(response["message"])));
 
     if (response["status"] == "success") {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (_) => LoginScreen()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final local = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          _buildTopBackground(theme),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: ListView(
-              padding: const EdgeInsets.only(top: 200, bottom: 20),
-              children: [
-                Text(local.signUp,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    )),
-                const SizedBox(height: 10),
-                Text(local.createAccount, style: theme.textTheme.bodyMedium),
-                const SizedBox(height: 30),
-                _buildTextField(local.name, Icons.person, nameController),
-                const SizedBox(height: 20),
-                _buildTextField(local.email, Icons.email, emailController),
-                const SizedBox(height: 20),
-                _buildPasswordField(local),
-                const SizedBox(height: 20),
-                _buildConfirmPasswordField(local),
-                const SizedBox(height: 10),
-                _buildAgreeToTerms(theme, local),
-                const SizedBox(height: 20),
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _buildRegisterButton(local),
-                const SizedBox(height: 30),
-                _buildLoginText(context, local),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopBackground(ThemeData theme) {
-    return Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        height: 220,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primary, AppColors.primary.withOpacity(0.85)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
+              Text(
+                local.signUp,
+                style: theme.textTheme.headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(local.createAccount, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 30),
+              _buildTextField(local.name, Icons.person, nameController),
+              const SizedBox(height: 16),
+              _buildTextField(local.email, Icons.email, emailController),
+              const SizedBox(height: 16),
+              _buildPasswordField(local.password),
+              const SizedBox(height: 16),
+              _buildConfirmPasswordField(local.confirmPassword),
+              const SizedBox(height: 10),
+              _buildAgreement(local),
+              const SizedBox(height: 20),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildRegisterButton(local),
+              const SizedBox(height: 20),
+              _buildLoginLink(local),
+            ],
           ),
         ),
-        child: Stack(
-          children: [
-            Positioned(top: 40, left: 30, child: _buildCircle(60)),
-            Positioned(top: 20, right: 50, child: _buildCircle(40)),
-            Positioned(top: 100, left: 80, child: _buildCircle(25)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCircle(double size) {
-    return Container(
-      height: size,
-      width: size,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white24,
       ),
     );
   }
@@ -159,49 +119,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildPasswordField(AppLocalizations local) {
+  Widget _buildPasswordField(String label) {
     return TextField(
       controller: passwordController,
       obscureText: !isPasswordVisible,
       decoration: InputDecoration(
-        labelText: local.password,
+        labelText: label,
         prefixIcon: Icon(Icons.lock, color: AppColors.primary),
         suffixIcon: IconButton(
-          icon: Icon(
-            isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
-          ),
-          onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
+          icon:
+              Icon(isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+          onPressed: () =>
+              setState(() => isPasswordVisible = !isPasswordVisible),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  Widget _buildConfirmPasswordField(AppLocalizations local) {
+  Widget _buildConfirmPasswordField(String label) {
     return TextField(
       controller: confirmPasswordController,
       obscureText: true,
       decoration: InputDecoration(
-        labelText: local.confirmPassword,
+        labelText: label,
         prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  Widget _buildAgreeToTerms(ThemeData theme, AppLocalizations local) {
+  Widget _buildAgreement(AppLocalizations local) {
     return Row(
       children: [
         Checkbox(
           value: agreeToTerms,
+          onChanged: (value) {
+            setState(() {
+              agreeToTerms = value!;
+            });
+          },
           activeColor: AppColors.primary,
-          onChanged: (value) => setState(() => agreeToTerms = value!),
         ),
         Expanded(
-          child: Text(local.termsAndConditions,
-              style: theme.textTheme.bodySmall),
-        ),
+          child: Text(
+            local.termsAndConditions,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        )
       ],
     );
   }
@@ -214,20 +179,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: Text(local.signUp,
-          style: const TextStyle(fontSize: 16, color: Colors.white)),
+      child: Text(
+        local.signUp,
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+      ),
     );
   }
 
-  Widget _buildLoginText(BuildContext context, AppLocalizations local) {
+  Widget _buildLoginLink(AppLocalizations local) {
     return Center(
       child: GestureDetector(
-        onTap: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => LoginScreen()),
-          );
-        },
+        onTap: () => Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+        ),
         child: Text.rich(
           TextSpan(
             text: "${local.alreadyHaveAccount} ",

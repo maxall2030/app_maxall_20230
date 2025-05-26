@@ -22,12 +22,16 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     super.initState();
-    loadUser();
+    _loadUserAndFavoriteStatus();
   }
 
-  Future<void> loadUser() async {
-    userId = await UserSession.getUserId();
-    setState(() {});
+  Future<void> _loadUserAndFavoriteStatus() async {
+    final id = await UserSession.getUserId();
+    final fav = await ApiFavorites.checkIfFavorite(id, widget.product.id);
+    setState(() {
+      userId = id;
+      isFavorite = fav;
+    });
   }
 
   Future<void> handleToggleFavorite() async {
@@ -41,12 +45,14 @@ class _ProductScreenState extends State<ProductScreen> {
     }
 
     final added = await ApiFavorites.toggleFavorite(userId!, widget.product.id);
+
     setState(() => isFavorite = added);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content:
-            Text(added ? local.addedToFavorites : local.removedFromFavorites),
+        content: Text(
+          added ? local.addedToFavorites : local.removedFromFavorites,
+        ),
         backgroundColor: added ? Colors.green : Colors.orange,
       ),
     );

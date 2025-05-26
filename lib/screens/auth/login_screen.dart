@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/screens/home_screen.dart';
 import 'package:app_maxall2/screens/auth/register_screen.dart';
 import 'package:app_maxall2/utils/user_session.dart';
-import 'package:app_maxall2/constants/colors.dart'; // ✅ استيراد ملف الألوان
+import 'package:app_maxall2/constants/colors.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   bool isLoading = false;
   bool isPasswordVisible = false;
   bool rememberMe = false;
@@ -30,11 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (response["status"] == "success") {
       final userId = int.tryParse(response["user"]["id"].toString()) ?? 0;
       await UserSession.saveUserId(userId);
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response["message"])),
       );
@@ -43,6 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -53,30 +60,21 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "تسجيل الدخول",
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
+                Text(local.login, style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 10),
-                Text(
-                  "مرحبًا بعودتك! يرجى تسجيل الدخول للمتابعة.",
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(local.welcomeBack, style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 30),
-                _buildTextField(
-                    "البريد الإلكتروني", Icons.email, emailController),
+                _buildTextField(local.email, Icons.email, emailController),
                 const SizedBox(height: 20),
-                _buildPasswordField(),
+                _buildPasswordField(local),
                 const SizedBox(height: 10),
-                _buildRememberMe(),
+                _buildRememberMe(local),
                 const SizedBox(height: 20),
                 isLoading
                     ? const CircularProgressIndicator()
-                    : _buildLoginButton(),
+                    : _buildLoginButton(local),
                 const SizedBox(height: 15),
-                _buildSocialLogin(),
-                const SizedBox(height: 20),
-                _buildRegisterText(context),
+                _buildRegisterText(context, local),
               ],
             ),
           ),
@@ -119,47 +117,41 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildPasswordField(AppLocalizations local) {
     return TextField(
       controller: passwordController,
       obscureText: !isPasswordVisible,
       decoration: InputDecoration(
-        labelText: "كلمة المرور",
+        labelText: local.password,
         prefixIcon: Icon(Icons.lock, color: AppColors.primary),
         suffixIcon: IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility : Icons.visibility_off,
             color: AppColors.textSecondary,
           ),
-          onPressed: () {
-            setState(() {
-              isPasswordVisible = !isPasswordVisible;
-            });
-          },
+          onPressed: () => setState(() => isPasswordVisible = !isPasswordVisible),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  Widget _buildRememberMe() {
+  Widget _buildRememberMe(AppLocalizations local) {
     return Row(
       children: [
         Checkbox(
           value: rememberMe,
           activeColor: AppColors.primary,
           onChanged: (value) {
-            setState(() {
-              rememberMe = value!;
-            });
+            setState(() => rememberMe = value!);
           },
         ),
-        Text("تذكرني", style: Theme.of(context).textTheme.bodyMedium),
+        Text(local.rememberMe, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(AppLocalizations local) {
     return ElevatedButton(
       onPressed: _login,
       style: ElevatedButton.styleFrom(
@@ -167,50 +159,24 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 100),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      child: const Text("تسجيل الدخول",
-          style: TextStyle(fontSize: 18, color: Colors.white)),
+      child: Text(local.login,
+          style: const TextStyle(fontSize: 18, color: Colors.white)),
     );
   }
 
-  Widget _buildSocialLogin() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildSocialIcon("assets/Facebook.png"),
-        const SizedBox(width: 15),
-        _buildSocialIcon("assets/x.png"),
-        const SizedBox(width: 15),
-        _buildSocialIcon("assets/Google.png"),
-      ],
-    );
-  }
-
-  Widget _buildSocialIcon(String assetPath) {
-    return InkWell(
-      onTap: () {},
-      child: CircleAvatar(
-        backgroundColor: Theme.of(context).cardColor,
-        radius: 22,
-        child: Image.asset(assetPath, width: 24),
-      ),
-    );
-  }
-
-  Widget _buildRegisterText(BuildContext context) {
+  Widget _buildRegisterText(BuildContext context, AppLocalizations local) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => RegisterScreen()),
-        );
-      },
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+      ),
       child: Text.rich(
         TextSpan(
-          text: "ليس لديك حساب؟ ",
+          text: "${local.dontHaveAccount} ",
           style: Theme.of(context).textTheme.bodyMedium,
           children: [
             TextSpan(
-              text: "إنشاء حساب",
+              text: local.createAccount,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: AppColors.primary,

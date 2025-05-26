@@ -1,4 +1,3 @@
-// screens/search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -29,6 +28,14 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _loadUserAndHistory();
+
+    _searchController.addListener(() {
+      if (_searchController.text.trim().isEmpty) {
+        setState(() {
+          _results.clear(); // عندما يتم مسح البحث نعيد عرض السجل
+        });
+      }
+    });
   }
 
   Future<void> _loadUserAndHistory() async {
@@ -122,6 +129,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSearching = _searchController.text.trim().isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("بحث المنتجات"),
@@ -148,7 +157,6 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       body: Column(
         children: [
-          // شريط البحث
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -164,20 +172,15 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
 
-          // عنوان سجل البحث + أزرار
-          if (_searchHistory.isNotEmpty)
+          if (!isSearching && _searchHistory.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     "سجل البحث",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Row(
                     children: [
@@ -203,12 +206,13 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
 
-          // عرض عناصر السجل
-          if (_searchHistory.isNotEmpty)
+          if (!isSearching && _searchHistory.isNotEmpty)
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: showAllHistory ? _searchHistory.length : (_searchHistory.length >= 3 ? 3 : _searchHistory.length),
+              itemCount: showAllHistory
+                  ? _searchHistory.length
+                  : (_searchHistory.length >= 3 ? 3 : _searchHistory.length),
               itemBuilder: (context, index) {
                 final item = _searchHistory[index];
                 return ListTile(
@@ -232,11 +236,10 @@ class _SearchScreenState extends State<SearchScreen> {
               },
             ),
 
-          // عرض النتائج
           _loading
               ? const Expanded(child: Center(child: CircularProgressIndicator()))
               : Expanded(
-                  child: _results.isEmpty
+                  child: _results.isEmpty && isSearching
                       ? const Center(child: Text("لا توجد نتائج"))
                       : ListView.builder(
                           itemCount: _results.length,

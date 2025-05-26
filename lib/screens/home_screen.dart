@@ -19,7 +19,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Product> allProducts = [];
-  List<Product> filteredProducts = [];
   bool isLoading = true;
   String errorMessage = "";
 
@@ -32,9 +31,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchProducts() async {
     try {
       List<Product> products = await ApiService.fetchProducts();
+      print("منتجات محملة: \${products.length}");
       setState(() {
         allProducts = products;
-        filteredProducts = products;
         isLoading = false;
       });
     } catch (e) {
@@ -90,9 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             centerTitle: true,
           ),
-
           SliverToBoxAdapter(child: CategoryList()),
-
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
@@ -105,16 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         TextSpan(
                           text: "${local.topDealsIn} ",
                           style: const TextStyle(
-                            color: Colors.blue,
+                            color: Colors.black,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
                           ),
                         ),
-                        TextSpan(
-                          text: local.electronics,
-                          style: const TextStyle(
-                            color: Colors.black87,
+                        const TextSpan(
+                          text: "MaxAll",
+                          style: TextStyle(
+                            color: AppColors.primary,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             fontStyle: FontStyle.italic,
@@ -123,24 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.secondary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
-                    onPressed: () {},
-                    child: Text(
-                      local.viewAll,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
-
           SliverToBoxAdapter(
             child: CarouselSlider(
               options: CarouselOptions(
@@ -162,51 +144,85 @@ class _HomeScreenState extends State<HomeScreen> {
               }).toList(),
             ),
           ),
-
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    local.featuredProducts,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        local.featuredProducts,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          local.viewAll,
+                          style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
                     height: 250,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      shrinkWrap: true,
-                      clipBehavior: Clip.none,
-                      itemCount: filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: ProductCard(product: filteredProducts[index]),
-                        );
-                      },
-                    ),
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : allProducts.isEmpty
+                            ? const Center(child: Text("لا توجد منتجات حالياً"))
+                            : ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                clipBehavior: Clip.none,
+                                itemCount: allProducts.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: ProductCard(
+                                        product: allProducts[index]),
+                                  );
+                                },
+                              ),
                   ),
                   const SizedBox(height: 20),
-                  Text(
-                    local.bestSellers,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        local.bestSellers,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          local.viewAll,
+                          style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverGrid(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  return ProductCard(product: filteredProducts[index]);
+                  return ProductCard(product: allProducts[index]);
                 },
-                childCount: filteredProducts.length,
+                childCount: allProducts.length,
               ),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,

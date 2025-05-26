@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:app_maxall2/main.dart';
+import 'package:app_maxall2/screens/Orders/orders_screen.dart';
+import 'package:app_maxall2/screens/wallet_screen.dart';
 import 'package:app_maxall2/utils/language_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -10,6 +12,7 @@ import 'package:app_maxall2/components/bottom_nav_bar.dart';
 import 'package:app_maxall2/screens/address_screen.dart';
 import 'package:app_maxall2/screens/auth/profile_screen.dart';
 import 'package:app_maxall2/screens/qr_code_screen.dart';
+import 'package:app_maxall2/screens/favorites_screen.dart';
 import 'package:app_maxall2/services/api_auth.dart';
 import 'package:app_maxall2/utils/user_session.dart';
 import 'package:app_maxall2/model/profile.dart';
@@ -82,6 +85,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     _buildPromoBanner(local),
                     _buildAdvertisement(),
                     const SizedBox(height: 8),
+                    _buildMainShortcuts(local),
                     _buildAccountOptions(local),
                     _buildSettings(local, themeProvider),
                     _buildSignOutButton(local),
@@ -144,7 +148,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (_) => const QRCodeScreen(userData: '1234')),
+                        builder: (_) => const QRCodeScreen(userData: '1234'),
+                      ),
                     );
                   },
                 )
@@ -153,6 +158,76 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         )
       ],
+    );
+  }
+
+  Widget _buildMainShortcuts(AppLocalizations local) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _buildCard(local.orders, Icons.receipt_long, local.trackOrders,
+                  () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const OrdersScreen()));
+              }),
+              _buildCard(local.returns, Icons.schedule, local.noReturns, () {}),
+            ],
+          ),
+          Row(
+            children: [
+              _buildCard(local.wallet, Icons.account_balance_wallet, "₪ 0.00",
+                  () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const WalletScreen()));
+              }),
+              _buildCard(
+                  local.favorites, Icons.favorite, "2 ${local.savedItems}", () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const FavoritesScreen()));
+              }),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard(
+      String title, IconData icon, String subtitle, VoidCallback onTap) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.all(6),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 4,
+                spreadRadius: 2,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 28, color: AppColors.primary),
+              const SizedBox(height: 8),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

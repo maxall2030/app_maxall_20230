@@ -81,6 +81,11 @@
 "failedToAdd": "❌ فشل في الإضافة إلى السلة",
 "swap": "مبادلة",
 "bestSeller": "الأكثر مبيعًا",
-"soldRecently": "تم البيع مؤخراً"
+"soldRecently": "تم البيع مؤخراً",
+"returns": "المرتجعات",
+"wallet": "الرصيد",
+"trackOrders": "تتبع الطلبات",
+"noReturns": "0 طلب مرتجع",
+"savedItems": "منتج محفوظ"
 
 }

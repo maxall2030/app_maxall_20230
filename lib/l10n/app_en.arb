@@ -81,6 +81,12 @@
 "failedToAdd": "❌ Failed to add to cart",
 "swap": "Swap",
 "bestSeller": "Best Seller",
-"soldRecently": "sold recently"
+"soldRecently": "sold recently",
+"returns": "Returns",
+"wallet": "Wallet",
+"trackOrders": "Track Orders",
+"noReturns": "0 return request",
+"savedItems": "saved items"
+
 
 }

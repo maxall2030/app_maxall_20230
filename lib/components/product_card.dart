@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import '../screens/product_screen.dart';
 import '../constants/colors.dart';
 import '../model/products_data.dart';
 import '../providers/cart_provider.dart';
 import '../services/api_favorites.dart';
+import '../utils/user_session.dart';
 
 class ProductCard extends StatefulWidget {
   final Product product;
@@ -29,12 +31,52 @@ class ProductCard extends StatefulWidget {
 
 class _ProductCardState extends State<ProductCard> {
   bool isFavorite = false;
+  int? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserAndFavoriteStatus();
+  }
+
+  Future<void> _loadUserAndFavoriteStatus() async {
+    final id = await UserSession.getUserId();
+    final fav = await ApiFavorites.checkIfFavorite(id, widget.product.id);
+    setState(() {
+      userId = id;
+      isFavorite = fav;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final local = AppLocalizations.of(context)!;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(local.loginToContinue)),
+      );
+      return;
+    }
+
+    final added = await ApiFavorites.toggleFavorite(userId!, widget.product.id);
+    setState(() => isFavorite = added);
+    widget.onFavoriteToggle?.call();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          added ? local.addedToFavorites : local.removedFromFavorites,
+        ),
+        backgroundColor: added ? Colors.green : Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final local = AppLocalizations.of(context)!;
-    int userId = 2; // سيتم استبداله لاحقًا بـ SharedPreferences
 
     return GestureDetector(
       onTap: widget.enableNavigation
@@ -85,26 +127,7 @@ class _ProductCardState extends State<ProductCard> {
                     top: 8,
                     left: 8,
                     child: GestureDetector(
-                      onTap: () async {
-                        final success = await ApiFavorites.toggleFavorite(
-                            userId, widget.product.id);
-                        if (success) {
-                          setState(() => isFavorite = !isFavorite);
-                          widget.onFavoriteToggle?.call();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isFavorite
-                                    ? local.addedToFavorites
-                                    : local.removedFromFavorites,
-                              ),
-                              backgroundColor:
-                                  isFavorite ? Colors.green : Colors.red,
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
+                      onTap: _toggleFavorite,
                       child: CircleAvatar(
                         backgroundColor: Theme.of(context).cardColor,
                         child: Icon(
@@ -134,8 +157,10 @@ class _ProductCardState extends State<ProductCard> {
                       },
                       child: CircleAvatar(
                         backgroundColor: Theme.of(context).cardColor,
-                        child: Icon(Icons.shopping_cart,
-                            color: AppColors.textPrimary),
+                        child: Icon(
+                          Icons.shopping_cart,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
                   ),

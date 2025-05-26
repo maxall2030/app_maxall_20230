@@ -4,7 +4,7 @@ import 'package:app_maxall2/services/api_favorites.dart';
 import 'package:app_maxall2/model/products_data.dart';
 import 'package:app_maxall2/components/product_card.dart';
 import 'package:app_maxall2/utils/user_session.dart';
-import 'package:app_maxall2/constants/colors.dart'; // ✅ إضافة استدعاء الألوان الموحدة
+import 'package:app_maxall2/constants/colors.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -32,7 +32,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Future<void> fetchFavorites() async {
     setState(() => isLoading = true);
     try {
-      final data = await ApiFavorites.getFavorites(userId);
+      final data = await ApiFavorites.getFavorites(userId); // ✅ استخدام الدالة الصحيحة
       setState(() {
         favoriteProducts = data;
         isLoading = false;
@@ -69,8 +69,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   padding: const EdgeInsets.all(8.0),
                   child: GridView.builder(
                     itemCount: favoriteProducts.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.72,
                       crossAxisSpacing: 10,
@@ -78,7 +77,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ),
                     itemBuilder: (context, index) {
                       final product = favoriteProducts[index];
-                      return ProductCard(product: product);
+                      return ProductCard(
+                        product: product,
+                        onFavoriteToggle: () {
+                          removeFromFavorites(product.id);
+                        },
+                      );
                     },
                   ),
                 ),

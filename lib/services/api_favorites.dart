@@ -1,43 +1,45 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/products_data.dart';
+import 'api_link.dart';
 
 class ApiFavorites {
-  static const String _baseUrl = "http://10.0.2.2/Maxall_php/upload";
-
-  /// ✅ جلب المفضلة
   static Future<List<Product>> getFavorites(int userId) async {
-    final response =
-        await http.get(Uri.parse("$_baseUrl/favorites.php?user_id=$userId"));
-
-    print("📡 الاستجابة: ${response.statusCode}");
-    print("📥 البيانات: ${response.body}");
+    final url = Uri.parse('$linkGetFavorites?user_id=$userId');
+    final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data["status"] == "success") {
-        return List<Product>.from(
-            data["data"].map((item) => Product.fromJson(item)));
-      } else {
-        throw Exception("فشل في تحميل المفضلة");
-      }
+      final List jsonList = json.decode(response.body);
+      return jsonList.map((item) => Product.fromJson(item)).toList();
     } else {
-      throw Exception("خطأ في الاتصال بالخادم");
+      throw Exception("فشل في تحميل المنتجات المفضلة");
     }
   }
 
-  /// ✅ تبديل الحالة (إضافة أو حذف) من المفضلة
   static Future<bool> toggleFavorite(int userId, int productId) async {
-    final response = await http.post(
-      Uri.parse("$_baseUrl/toggle_favorite.php"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"user_id": userId, "product_id": productId}),
-    );
+    final url = Uri.parse(linkToggleFavorite);
+    final response = await http.post(url, body: {
+      'user_id': userId.toString(),
+      'product_id': productId.toString(),
+    });
 
-    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+      return result['status'] == 'added';
+    } else {
+      return false;
+    }
+  }
 
-    // ✅ نتحقق من message وليس status
-    return data["message"] ==
-        "added"; // true = تمت الإضافة، false = تمت الإزالة
+  static Future<bool> checkIfFavorite(int userId, int productId) async {
+    final url =
+        Uri.parse('$linkCheckFavorite?user_id=$userId&product_id=$productId');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final result = json.decode(response.body);
+      return result['isFavorite'] == true;
+    } else {
+      return false;
+    }
   }
 }
