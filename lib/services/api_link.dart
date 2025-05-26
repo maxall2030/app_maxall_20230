@@ -17,4 +17,5 @@ const String linkprofile_id = "$linkServerName/auth/profile.php?user_id=";
 const String linkSearch = "$linkServerName/search_products.php?query=";
 const String linkGetFavorites = "$linkServerName/upload/favorites.php";
 const String linkToggleFavorite = "$linkServerName/upload/toggle_favorite.php";
-const String linkCheckFavorite = "$linkServerName/upload/check.php?user_id=&product_id=";
+const String linkCheckFavorite =
+    "$linkServerName/upload/check.php?user_id=5&product_id=";
